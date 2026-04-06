@@ -1,0 +1,104 @@
+/* Contenedor principal con fondo morado */
+.loginFondo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100vh;
+  background: #8b5cf6; /* Color morado */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+}
+
+/* Contenedor del formulario - centrado */
+.loginContainer {
+  max-width: 450px;
+  width: 90%;
+  padding: 50px 40px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loginContainer h1 {
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.loginContainer h2 {
+  color: #666;
+  margin-bottom: 35px;
+  font-size: 18px;
+  font-weight: normal;
+}
+
+/* Grupo de inputs - cada input está en su propio div centrado */
+.inputGroup {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Los inputs ocupan todo el ancho del contenedor */
+.inputGroup input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: all 0.3s;
+  background: #f8f9fa;
+  color: #000;
+}
+
+.inputGroup input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  background: rgba(123, 123, 123, 0.263);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+
+/* Botón de ingreso */
+.loginContainer button {
+  width: 100%;
+  padding: 14px;
+  background: #8b5cf6; /* Morado para el botón también */
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+
+.loginContainer button:hover {
+  background: #7c3aed; /* Morado más oscuro al hover */
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+}
+
+.loginContainer button:active {
+  transform: translateY(0);
+}
