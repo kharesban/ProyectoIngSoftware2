@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,Link } from "react-router-dom";
 import { AuthContext } from "../Context/MyContext";
 import styles from "../Styles/Login.module.css";
 
@@ -15,7 +15,7 @@ function Login() {
       contra: contra
     };
 
-    if (user === "admin" && contra === "123") {
+    if (user === "admin" && contra === "123") { //cambiar para que se maneje con sql
       login(fakeUser);
       navigate("/dashboard");
     } else {
@@ -34,7 +34,7 @@ function Login() {
             <div className={styles.inputGroup}>
                 <input
                     type="email"
-                    placeholder="Email"
+                    placeholder="Usuario"
                     value={user}
                     onChange={(e) => setUser(e.target.value)}
                 />
@@ -53,6 +53,13 @@ function Login() {
             <button onClick={handleLogin}>
                 Ingresar
             </button>
+            <p style={{ textAlign: "center", marginTop: "15px" }}>
+              ¿No tienes una cuenta?{" "}
+              <Link 
+                to="/registro" 
+                style={{ color: "#007bff"}}> Regístrate aquí
+              </Link>
+            </p>
         </div>
     </div>
   );

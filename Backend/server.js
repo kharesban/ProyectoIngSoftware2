@@ -1,8 +1,7 @@
-// backend/server.js
 const express = require('express');
-const mysql = require('mysql2/promise');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const db = require('./sqlModels'); 
 
 dotenv.config();
 
@@ -13,34 +12,147 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Pool de conexiones a MySQL
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+// ============ RUTAS DE USUARIOS ============
 
-// Ruta de prueba
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Backend funcionando' });
-});
-
-// Ejemplo: Obtener datos de una tabla
-app.get('/api/datos', async (req, res) => {
+// GET - Obtener todos los usuarios
+app.get('/api/usuarios', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM tu_tabla');
-        res.json(rows);
+        const usuarios = await db.Usuario.findAll();
+        res.json(usuarios);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
     }
 });
 
+// GET - Obtener usuario por ID
+app.get('/api/usuarios/:id', async (req, res) => {
+    try {
+        const usuario = await db.Usuario.findByPk(req.params.id);
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        res.json(usuario);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET - Obtener usuario por email (para login)
+app.get('/api/usuarios/email/:email', async (req, res) => {
+    try {
+        const usuario = await db.Usuario.findOne({
+            where: { email: req.params.email }
+        });
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        res.json(usuario);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST - Crear nuevo usuario (registro)
+app.post('/api/registro', async (req, res) => {
+    try {
+        const { email, password, nombre, edad } = req.body;
+        
+        // Verificar si el usuario ya existe
+        const usuarioExistente = await db.Usuario.findOne({
+            where: { email: email }
+        });
+        
+        if (usuarioExistente) {
+            return res.status(400).json({ error: 'El email ya está registrado' });
+        }
+        
+        // Crear nuevo usuario
+        const nuevoUsuario = await db.Usuario.create({
+            email,
+            password, // ¡En producción debes hashear la contraseña!
+            nombre,
+            edad
+        });
+        
+        // No enviar la contraseña en la respuesta
+        const { password: _, ...usuarioSinPassword } = nuevoUsuario.toJSON();
+        res.status(201).json(usuarioSinPassword);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST - Login
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        const usuario = await db.Usuario.findOne({
+            where: { email: email }
+        });
+        
+        if (!usuario) {
+            return res.status(401).json({ error: 'Credenciales inválidas' });
+        }
+        
+        // ¡En producción debes comparar contraseñas hasheadas!
+        if (usuario.password !== password) {
+            return res.status(401).json({ error: 'Credenciales inválidas' });
+        }
+        
+        // No enviar la contraseña en la respuesta
+        const { password: _, ...usuarioSinPassword } = usuario.toJSON();
+        res.json(usuarioSinPassword);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// PUT - Actualizar usuario
+app.put('/api/usuarios/:id', async (req, res) => {
+    try {
+        const usuario = await db.Usuario.findByPk(req.params.id);
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        await usuario.update(req.body);
+        res.json(usuario);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DELETE - Eliminar usuario
+app.delete('/api/usuarios/:id', async (req, res) => {
+    try {
+        const usuario = await db.Usuario.findByPk(req.params.id);
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        await usuario.destroy();
+        res.json({ message: 'Usuario eliminado correctamente' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Ruta de prueba
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', message: 'Backend con Sequelize funcionando' });
+});
+
 // Iniciar servidor
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`✅ Servidor en http://localhost:${PORT}`);
+    
+    // Sincronizar base de datos al iniciar
+    try {
+        await db.sequelize.sync({ alter: true });
+        console.log('📦 Base de datos sincronizada');
+    } catch (error) {
+        console.error('❌ Error al sincronizar BD:', error);
+    }
 });
