@@ -1,11 +1,37 @@
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "./MyContext";
-import "./App.css";
+import { AuthContext } from "../Context/MyContext";
+import "../App.css";
+
+import CepilloBambu from '../assets/ImagenesProductos/CepilloBambu.png'
+import BotellaReutilizable from '../assets/ImagenesProductos/BotellaReutilizable.png'
+import BolsaTela from '../assets/ImagenesProductos/BolsaTela.png'
+import PitillosAcero from "../assets/ImagenesProductos/PitillosAcero.png"
+import JabonArtesanal from "../assets/ImagenesProductos/JabonArtesanal.png"
+import ShampooSolido from "../assets/ImagenesProductos/ShampooSolido.png"
+import AcondicionadorSolido from "../assets/ImagenesProductos/AcondicionadorSolido.png"
+import DesodoranteNatural from "../assets/ImagenesProductos/DesodoranteNatural.png"
+import EsponjaVegetal from "../assets/ImagenesProductos/EsponjaVegetal.png"
+import DetergenteEcologico from "../assets/ImagenesProductos/DetergenteEcologico.png"
+import LimpiadorMultiusos from "../assets/ImagenesProductos/LimpiadorMultiusos.png"
+import CepilloPlatosBambu from "../assets/ImagenesProductos/CepilloPlatosBambu.png"
+import PañosReutilizables from "../assets/ImagenesProductos/PañosReutillizables.png"
+import EnvoltorioCeraAbeja from "../assets/ImagenesProductos/EnvoltoriosCeraAbeja.png"
+import ContenedorVidrio from "../assets/ImagenesProductos/ContenedorVidrio.png"
+import MacetaBiodegradable from "../assets/ImagenesProductos/MacetaBiodegradable.png"
+import SemillasHuerta from "../assets/ImagenesProductos/SemillasHuerta.png"
+import ComposteraDomestica from "../assets/ImagenesProductos/ComposteraDomestica.png"
+import CuadernoReciclado from "../assets/ImagenesProductos/CuadernoReciclado.png"
+import LapicesReciclados from "../assets/ImagenesProductos/LapicesReciclados.png"
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const { user, logout } = useContext(AuthContext);
+    const [ productoExpandido, setProductoExpandido ] = useState(null);
+
+    const toggleExpand = (productId) => {
+        setProductoExpandido(productoExpandido === productId ? null: productId);
+    }
 
     const productos = [
         {
@@ -14,6 +40,8 @@ const Dashboard = () => {
             precio: 6000,
             categoria: "Cuidado personal",
             descripcion: "Cepillo dental ecológico elaborado con bambú biodegradable.",
+            stock: 190,
+            imagen: CepilloBambu
         },
         {
             id: 2,
@@ -21,6 +49,8 @@ const Dashboard = () => {
             precio: 25000,
             categoria: "Hogar sostenible",
             descripcion: "Botella durable para reducir el consumo de plástico de un solo uso.",
+            stock: 125,
+            imagen: BotellaReutilizable
         },
         {
             id: 3,
@@ -28,6 +58,8 @@ const Dashboard = () => {
             precio: 12000,
             categoria: "Compras ecológicas",
             descripcion: "Bolsa reutilizable ideal para mercado, compras o uso diario.",
+            stock: 2500,
+            imagen: BolsaTela
         },
         {
             id: 4,
@@ -35,6 +67,8 @@ const Dashboard = () => {
             precio: 10000,
             categoria: "Cocina sostenible",
             descripcion: "Set de pitillos reutilizables en acero inoxidable.",
+            stock: 348,
+            imagen: PitillosAcero
         },
         {
             id: 5,
@@ -42,6 +76,8 @@ const Dashboard = () => {
             precio: 9000,
             categoria: "Cuidado personal",
             descripcion: "Jabón natural elaborado con ingredientes biodegradables.",
+            stock: 12,
+            imagen: JabonArtesanal
         },
         {
             id: 6,
@@ -49,6 +85,8 @@ const Dashboard = () => {
             precio: 18000,
             categoria: "Cuidado personal",
             descripcion: "Shampoo compacto sin envase plástico, práctico y ecológico.",
+            stock: 3,
+            imagen: ShampooSolido
         },
         {
             id: 7,
@@ -56,6 +94,8 @@ const Dashboard = () => {
             precio: 19000,
             categoria: "Cuidado personal",
             descripcion: "Acondicionador en barra para reducir residuos plásticos.",
+            stock: 1,
+            imagen: AcondicionadorSolido
         },
         {
             id: 8,
@@ -63,6 +103,9 @@ const Dashboard = () => {
             precio: 16000,
             categoria: "Cuidado personal",
             descripcion: "Desodorante libre de aluminio y elaborado con ingredientes naturales.",
+            stock: 46,
+            imagen: DesodoranteNatural
+            
         },
         {
             id: 9,
@@ -70,6 +113,8 @@ const Dashboard = () => {
             precio: 8000,
             categoria: "Baño y aseo",
             descripcion: "Esponja biodegradable hecha a base de fibras vegetales.",
+            stock: 400,
+            imagen: EsponjaVegetal
         },
         {
             id: 10,
@@ -77,13 +122,17 @@ const Dashboard = () => {
             precio: 22000,
             categoria: "Limpieza del hogar",
             descripcion: "Detergente biodegradable para lavar ropa cuidando el medio ambiente.",
+            stock: 34,
+            imagen: DetergenteEcologico
         },
         {
             id: 11,
-            nombre: "Limpiador Multiusos Ecológico",
+            nombre: "Limpiador Multiusos",
             precio: 15000,
             categoria: "Limpieza del hogar",
             descripcion: "Producto de limpieza biodegradable para diferentes superficies.",
+            stock: 2,
+            imagen: LimpiadorMultiusos
         },
         {
             id: 12,
@@ -91,6 +140,8 @@ const Dashboard = () => {
             precio: 11000,
             categoria: "Cocina sostenible",
             descripcion: "Cepillo reutilizable con mango de bambú para lavar utensilios.",
+            stock: 3,
+            imagen: CepilloPlatosBambu
         },
         {
             id: 13,
@@ -98,6 +149,8 @@ const Dashboard = () => {
             precio: 14000,
             categoria: "Limpieza del hogar",
             descripcion: "Paños lavables que reemplazan servilletas o toallas desechables.",
+            stock: 1000,
+            imagen: PañosReutilizables
         },
         {
             id: 14,
@@ -105,6 +158,8 @@ const Dashboard = () => {
             precio: 20000,
             categoria: "Cocina sostenible",
             descripcion: "Envoltorios reutilizables para conservar alimentos sin plástico.",
+            stock: 70,
+            imagen: EnvoltorioCeraAbeja
         },
         {
             id: 15,
@@ -112,6 +167,8 @@ const Dashboard = () => {
             precio: 24000,
             categoria: "Cocina sostenible",
             descripcion: "Recipiente reutilizable para almacenar alimentos de forma segura.",
+            stock: 5,
+            imagen: ContenedorVidrio
         },
         {
             id: 16,
@@ -119,6 +176,8 @@ const Dashboard = () => {
             precio: 7000,
             categoria: "Jardinería",
             descripcion: "Maceta compostable ideal para plantas pequeñas o semilleros.",
+            stock: 10,
+            imagen: MacetaBiodegradable
         },
         {
             id: 17,
@@ -126,6 +185,8 @@ const Dashboard = () => {
             precio: 5000,
             categoria: "Jardinería",
             descripcion: "Paquete de semillas para iniciar una huerta casera sostenible.",
+            stock: 50,
+            imagen: SemillasHuerta
         },
         {
             id: 18,
@@ -133,6 +194,8 @@ const Dashboard = () => {
             precio: 85000,
             categoria: "Hogar sostenible",
             descripcion: "Compostera para transformar residuos orgánicos en abono natural.",
+            stock: 20,
+            imagen: ComposteraDomestica
         },
         {
             id: 19,
@@ -140,6 +203,8 @@ const Dashboard = () => {
             precio: 13000,
             categoria: "Papelería ecológica",
             descripcion: "Cuaderno elaborado con papel reciclado y materiales sostenibles.",
+            stock: 150,
+            imagen: CuadernoReciclado
         },
         {
             id: 20,
@@ -147,6 +212,8 @@ const Dashboard = () => {
             precio: 6000,
             categoria: "Papelería ecológica",
             descripcion: "Set de lápices fabricados con materiales reciclados.",
+            stock: 200,
+            imagen: LapicesReciclados
         },
     ];
 
@@ -271,14 +338,25 @@ const Dashboard = () => {
                                     <div>
                                         <h3>{producto.nombre}</h3>
                                         <p className="categoria-producto">{producto.categoria}</p>
-                                        <p>{producto.descripcion}</p>
-                                        <p className="precio-producto">${producto.precio}</p>
+
                                     </div>
 
-                                    <button
-                                        className="boton-agregar"
-                                        onClick={() => agregarAlCarrito(producto)}
-                                    >
+                                    <button onClick={() => toggleExpand(producto.id)}
+                                    className="boton-expandido">
+                                        {productoExpandido === producto.id ? "Ver menos" : "Ver más"}
+                                    </button>
+
+                                    {productoExpandido === producto.id && (
+                                        <div classname="informacion-expandido">
+                                            <img src={producto.imagen} alt={producto.nombre} className="imagen-expandida" />
+                                            <p><strong>Descripción:</strong> {producto.descripcion} </p>
+                                            <p><strong>Stock:</strong> {producto.stock} </p>
+                                            <p><strong>Categoría:</strong> {producto.categoria} </p>
+                                            <p><strong>Precio:</strong> {producto.precio} </p>
+                                        </div>
+                                    )}
+
+                                    <button className="boton-agregar" onClick={() => agregarAlCarrito(producto)}>
                                         Agregar
                                     </button>
                                 </div>

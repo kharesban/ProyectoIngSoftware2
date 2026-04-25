@@ -1,8 +1,9 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "./MyContext";
-import styles from "./Login.module.css";
-import logoEco from "./assets/logo-ecomart.png";
+import { AuthContext } from "../Context/MyContext";
+import styles from "../Styles/Login.module.css";
+import logoEco from "../assets/logo-ecomart.png";
+import { Link } from "react-router-dom";
 
 function Login() {
   const [user, setUser] = useState("");
@@ -56,6 +57,15 @@ function Login() {
         </div>
 
         <button onClick={handleLogin}>Ingresar</button>
+
+          <p style={{ textAlign: "center", marginTop: "15px" }}>
+            ¿No tienes una cuenta?{" "}
+            <Link 
+            to="/register"
+            style={{ color: "#007bff"}}> Regístrate aquí
+            </Link>
+          </p>
+
       </div>
     </div>
   );

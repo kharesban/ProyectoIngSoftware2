@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { PrivateRoute } from "./PrivateRoute";
-import Login from "./Login";
-import Dashboard from "./dashboard";
-import Carrito from "./CarritoCompras";
+import { PrivateRoute } from "./Rutas/PrivateRoute";
+import Login from "./Paginas/Login";
+import Register from "./Paginas/Register";
+import Dashboard from "./Paginas/dashboard";
+import Carrito from "./Paginas/CarritoCompras";
 
 function App() {
   return (
@@ -11,17 +12,17 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/dashboard"
-          element={
+        <Route path="/register" element={<Register />} />
+
+        <Route path="/dashboard" 
+        element={
             <PrivateRoute>
               <Dashboard />
             </PrivateRoute>
           }
         />
 
-        <Route
-          path="/carrito"
+        <Route path="/carrito"
           element={
             <PrivateRoute>
               <Carrito />
