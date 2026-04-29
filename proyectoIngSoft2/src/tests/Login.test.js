@@ -23,3 +23,8 @@ test('usuario vacío', () => {
 test('contraseña vacía', () => {
   expect(validarLogin("admin", "")).toBe(false);
 });
+
+test('login distingue mayúsculas y minúsculas', () => {
+  expect(validarLogin("Admin", "123")).toBe(false);
+});
+
