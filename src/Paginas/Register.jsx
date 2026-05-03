@@ -1,63 +1,71 @@
 import { useState } from "react";
-import { useNavigate,Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import styles from "../Styles/Login.module.css";
 
-function Register() {
-  const [user, setUser] = useState("");
-  const [contra,setContra] =useState("");
-  const [contraV, setContraV] = useState("");
-  const [error, setError] = useState("");
+function Registro() {
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const navigate = useNavigate();
 
-  const validatePasswords = () => {
-    if (contra !== contraV) {
-      setError("Las contraseñas no coinciden");
-      return false;
-    }
-    if (contra.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
-      return false;
-    }
-    if (user.trim() === "") {
-      setError("El email es requerido");
-      return false;
-    }
-    return true;
-  };
-
-
-  const handleRegister = async() => {
-   // Limpiar error anterior
-    setError("");
-    
-    // Validar antes de registrar
-    if (!validatePasswords()) {
+  const handleRegister = async () => {
+    if (nombre === "" || email === "" || password === "") {
+      alert("Por favor completa todos los campos.");
       return;
     }
 
-    const fakeUser = {
-      user: user,
-      contra: contra
-    };
+    try {
+      const respuesta = await fetch("http://localhost:3000/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre: nombre,
+          email: email,
+          password: password
+        })
+      });
 
-    alert("Usuario registrado exitosamente"); //faltaria meter el que se guarde el usuario al sql
-    navigate("/login");
-  
+      const data = await respuesta.json();
+
+      if (!respuesta.ok) {
+        alert(data.error || "No se pudo registrar el usuario.");
+        return;
+      }
+
+      alert("Usuario registrado correctamente.");
+      navigate("/login");
+
+    } catch (error) {
+      console.error("Error al registrar:", error);
+      alert("No se pudo conectar con el servidor.");
+    }
   };
 
   return (
     <div className={styles.loginFondo}>
-      <h1>Bienvenidos a EcoMart</h1>
+      <h1>Registro EcoMart</h1>
 
       <div className={styles.loginContainer}>
-        <h2>Registro de nuevo usuario</h2>
+        <h2>Crear cuenta</h2>
 
         <div className={styles.inputGroup}>
           <input
-            type="string"
-            placeholder="Ingresa el Nombre de Usuario"
-            value={user}
-            onChange={(e) => setUser(e.target.value)}
+            type="text"
+            placeholder="Nombre"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
@@ -65,29 +73,13 @@ function Register() {
           <input
             type="password"
             placeholder="Contraseña"
-            value={contra}
-            onChange={(e) => setContra(e.target.value)}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-
-        <div className={styles.inputGroup}>
-          <input
-            type="password"
-            placeholder="Confirmar Contraseña"
-            value={contraV}
-            onChange={(e) => setContraV(e.target.value)}
-          />
-        </div>
-
-        {/* Mostrar mensaje de error si existe */}
-        {error && (
-          <p style={{ color: "red", textAlign: "center", margin: "10px 0" }}>
-            {error}
-          </p>
-        )}
 
         <button onClick={handleRegister}>
-          Crear cuenta
+          Registrarse
         </button>
 
         <p style={{ textAlign: "center", marginTop: "15px" }}>
@@ -101,5 +93,4 @@ function Register() {
   );
 }
 
-export default Register;
-
+export default Registro;
