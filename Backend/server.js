@@ -54,36 +54,40 @@ app.get('/api/usuarios/email/:email', async (req, res) => {
 });
 
 // POST - Crear nuevo usuario (registro)
-app.post('/api/registro', async (req, res) => {
+app.post('/api/register', async (req, res) => {
     try {
-        const { email, password, nombre, edad } = req.body;
-        
-        // Verificar si el usuario ya existe
+        const { nombre, email, password } = req.body;
+
+        if (!nombre || !email || !password) {
+            return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+        }
+
         const usuarioExistente = await db.Usuario.findOne({
             where: { email: email }
         });
-        
+
         if (usuarioExistente) {
-            return res.status(400).json({ error: 'El email ya está registrado' });
+            return res.status(400).json({ error: 'El correo ya está registrado' });
         }
-        
-        // Crear nuevo usuario
+
         const nuevoUsuario = await db.Usuario.create({
-            email,
-            password, // ¡En producción debes hashear la contraseña!
-            nombre,
-            edad
+            nombre: nombre,
+            email: email,
+            password: password
         });
-        
-        // No enviar la contraseña en la respuesta
+
         const { password: _, ...usuarioSinPassword } = nuevoUsuario.toJSON();
-        res.status(201).json(usuarioSinPassword);
+
+        res.status(201).json({
+            mensaje: 'Usuario registrado correctamente',
+            usuario: usuarioSinPassword
+        });
+
     } catch (error) {
-        console.error(error);
+        console.error("Error en registro:", error);
         res.status(500).json({ error: error.message });
     }
 });
-
 // POST - Login
 app.post('/api/login', async (req, res) => {
     try {

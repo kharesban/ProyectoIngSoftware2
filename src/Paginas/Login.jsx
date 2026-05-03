@@ -10,32 +10,58 @@ function Login() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const handleLogin = () => {
-    const fakeUser = {
-      user: user,
-      contra: contra
-    };
+  const handleLogin = async () => {
+    if (user.trim() === "" || contra.trim() === "") {
+      alert("Por favor completa todos los campos.");
+      return;
+    }
 
-    // ⚠️ TEMPORAL (luego se conecta con backend)
-    if (user === "admin" && contra === "123") {
-      login(fakeUser);
+    try {
+      const respuesta = await fetch("http://localhost:3000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: user,
+          password: contra
+        })
+      });
+
+      const data = await respuesta.json();
+
+      if (!respuesta.ok) {
+        alert(data.error || "Email o contraseña incorrecta.");
+        return;
+      }
+
+      /*
+        Esto funciona si tu backend responde:
+        res.json(usuarioSinPassword)
+
+        O si responde:
+        res.json({ usuario: usuarioSinPassword })
+      */
+      const usuarioLogueado = data.usuario || data;
+
+      login(usuarioLogueado);
       navigate("/dashboard");
-    } else {
-      alert("Email o contraseña incorrecta.");
+
+    } catch (error) {
+      console.error("Error en login:", error);
+      alert("No se pudo conectar con el servidor.");
     }
   };
 
   return (
     <div className={styles.loginFondo}>
       
-      {/* Sección izquierda */}
       <div className={styles.welcomeSection}>
         <img src={logoEco} alt="Logo EcoMart" className={styles.logo} />
         <h1>Bienvenidos a EcoMart</h1>
         <p>Tu tienda ecológica para un consumo más responsable.</p>
       </div>
 
-      {/* Formulario */}
       <div className={styles.loginContainer}>
         <h2>Login</h2>
 

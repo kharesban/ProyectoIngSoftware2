@@ -4,58 +4,104 @@ import styles from "../Styles/Login.module.css";
 import logoEco from "../assets/logo-ecomart.png";
 
 function Register() {
-  const [user, setUser] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
   const [contra, setContra] = useState("");
   const [contraV, setContraV] = useState("");
   const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
-  const validatePasswords = () => {
-    if (user.trim() === "") {
+  const validateForm = () => {
+    if (nombre.trim() === "") {
+      setError("El nombre es requerido");
+      return false;
+    }
+
+    if (email.trim() === "") {
       setError("El email es requerido");
       return false;
     }
+
+    if (!email.includes("@")) {
+      setError("Ingresa un email válido");
+      return false;
+    }
+
     if (contra.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres");
       return false;
     }
+
     if (contra !== contraV) {
       setError("Las contraseñas no coinciden");
       return false;
     }
+
     return true;
   };
 
   const handleRegister = async () => {
     setError("");
 
-    if (!validatePasswords()) return;
+    if (!validateForm()) return;
 
-    // ⚠️ TEMPORAL (luego conectar con backend)
-    alert("Usuario registrado exitosamente");
-    navigate("/login");
+    try {
+      const respuesta = await fetch("http://localhost:3000/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre: nombre,
+          email: email,
+          password: contra
+        })
+      });
+
+      const data = await respuesta.json();
+
+      if (!respuesta.ok) {
+        setError(data.error || "No se pudo registrar el usuario.");
+        return;
+      }
+
+      alert("Usuario registrado exitosamente");
+      navigate("/login");
+
+    } catch (error) {
+      console.error("Error en registro:", error);
+      setError("No se pudo conectar con el servidor.");
+    }
   };
 
   return (
     <div className={styles.loginFondo}>
 
-      {/* Sección izquierda */}
       <div className={styles.welcomeSection}>
         <img src={logoEco} alt="Logo EcoMart" className={styles.logo} />
         <h1>Bienvenidos a EcoMart</h1>
         <p>Tu tienda ecológica para un consumo más responsable.</p>
       </div>
 
-      {/* Formulario */}
       <div className={styles.loginContainer}>
         <h2>Registro de nuevo usuario</h2>
 
         <div className={styles.inputGroup}>
           <input
             type="text"
-            placeholder="Ingresa el Nombre de Usuario"
-            value={user}
-            onChange={(e) => setUser(e.target.value)}
+            placeholder="Ingresa tu nombre"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <input
+            type="email"
+            placeholder="Ingresa tu email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
@@ -71,7 +117,7 @@ function Register() {
         <div className={styles.inputGroup}>
           <input
             type="password"
-            placeholder="Confirmar Contraseña"
+            placeholder="Confirmar contraseña"
             value={contraV}
             onChange={(e) => setContraV(e.target.value)}
           />
