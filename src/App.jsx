@@ -4,6 +4,7 @@ import Login from "./Paginas/Login";
 import Register from "./Paginas/Register";
 import Dashboard from "./Paginas/dashboard";
 import Carrito from "./Paginas/CarritoCompras";
+import "./Styles/App.css";
 
 function App() {
   return (
