@@ -151,12 +151,11 @@ app.get('/api/health', (req, res) => {
 // Iniciar servidor
 app.listen(PORT, async () => {
     console.log(`✅ Servidor en http://localhost:${PORT}`);
-    
-    // Sincronizar base de datos al iniciar
+
     try {
-        await db.sequelize.sync({ alter: true });
-        console.log('📦 Base de datos sincronizada');
+        await db.sequelize.sync();
+        console.log(' Base de datos sincronizada');
     } catch (error) {
-        console.error('❌ Error al sincronizar BD:', error);
+        console.error(' Error al sincronizar BD:', error);
     }
 });

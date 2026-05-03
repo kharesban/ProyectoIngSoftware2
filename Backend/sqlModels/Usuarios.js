@@ -1,43 +1,34 @@
 const { DataTypes } = require('sequelize');
 
-// Exportar como función que recibe sequelize y Sequelize
-module.exports = (sequelize, Sequelize) => {
-    const Usuario = sequelize.define('Usuario', {
+module.exports = (sequelize, DataTypes) => {
+    const Usuario = sequelize.define("Usuario", {
         id: {
             type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
+            primaryKey: true,
+            autoIncrement: true
         },
+
         nombre: {
             type: DataTypes.STRING(100),
-            allowNull: false,
-            validate: {
-                notEmpty: true
-            }
+            allowNull: false
         },
+
         email: {
             type: DataTypes.STRING(100),
             allowNull: false,
             unique: true,
-            validate: {
-                isEmail: true
-            }
+            field: "correo"
         },
+
         password: {
             type: DataTypes.STRING(255),
-            allowNull: false
-        },
-        edad: {
-            type: DataTypes.INTEGER,
-            validate: {
-                min: 0,
-                max: 120
-            }
+            allowNull: false,
+            field: "contraseña"
         }
     }, {
-        tableName: 'usuarios',
-        timestamps: true,
-        underscored: true
+        tableName: "Usuario",
+        freezeTableName: true,
+        timestamps: false
     });
 
     return Usuario;
