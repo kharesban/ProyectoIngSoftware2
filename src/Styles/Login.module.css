@@ -1,0 +1,140 @@
+/* Esta es la misma estructura de tu Login.css pero ya con los cambios en los colores */
+.loginFondo {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #010038, #20124d, #00bcbc);
+  display: flex;
+  align-items: center;
+  padding: 1% 10%;
+}
+
+.welcomeSection {
+  flex: 1;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo {
+  width: 250px;
+  max-width: 150%;
+  display: block;
+  background: white;
+  border-radius: 100px;
+}
+
+.welcomeSection h1 {
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 18px;
+  max-width: 620px;
+  text-align: center;
+}
+
+.welcomeSection p {
+  font-size: 20px;
+  line-height: 1.5;
+  max-width: 520px;
+  opacity: 0.95;
+  text-align: center;
+}
+
+.loginContainer {
+  width: 100%;
+  max-width: 600px;
+  padding: 50px 40px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.loginContainer h2 {
+  color: #000000;
+  margin-bottom: 35px;
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.inputGroup {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #787575;
+  border-radius: 10px;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: all 0.3s;
+  background: #ffffff;
+  color: #000000;
+}
+
+.inputGroup input:focus {
+  outline: none;
+  border-color: #00bcbc;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0, 188, 188, 0.15);
+}
+
+.loginContainer button {
+  width: 100%;
+  padding: 14px;
+  background: #00b06a;
+  color: rgb(5, 5, 5);
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+
+.loginContainer button:hover {
+  background: #00cc6a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 176, 106, 0.3);
+}
+
+.loginContainer button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 992px) {
+  .loginFondo {
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 35px;
+  }
+
+  .welcomeSection {
+    text-align: center;
+    align-items: center;
+  }
+
+  .logo {
+    width: 180px;
+    margin-bottom: 18px;
+  }
+
+  .welcomeSection h1 {
+    font-size: 46px;
+    max-width: 100%;
+  }
+
+  .welcomeSection p {
+    max-width: 100%;
+  }
+
+  .loginContainer {
+    max-width: 500px;
+  }
+}
