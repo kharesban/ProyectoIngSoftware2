@@ -9,20 +9,23 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Rutas Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
-
         <Route path="/register" element={<Register />} />
 
-        <Route path="/dashboard" 
-        element={
+        {/* Rutas Privadas */}
+        <Route 
+          path="/dashboard" 
+          element={
             <PrivateRoute>
               <Dashboard />
             </PrivateRoute>
-          }
+          } 
         />
 
-        <Route path="/carrito"
+        <Route 
+          path="/carrito"
           element={
             <PrivateRoute>
               <Carrito />
