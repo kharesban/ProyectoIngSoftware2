@@ -1,39 +1,30 @@
-<<<<<<< HEAD
-# ProyectoIngSoftware2
+# ProyectoIngSoftware2 - Ecomart
 
 Este proyecto integra un frontend desarrollado con React + Vite y un backend con Node.js para la gestión de Ecomart.
 
-## Frontend (React + Vite)
+## Requisitos previos
 
-Este proyecto utiliza Vite para el desarrollo rápido con React.
+Antes de comenzar, asegúrate de tener instalado:
+- Node.js (versión 14 o superior)
+- MySQL Workbench
+- Git
 
-### Plugins disponibles:
-- @vitejs/plugin-react (usa Oxc)
-- @vitejs/plugin-react-swc (usa SWC)
+## Instalación y ejecución
 
-## Notas
+### 📖 Instrucciones detalladas
+Para ver el paso a paso completo de instalación y ejecución, consulta el [Instructivo de instalación](INSTRUCTIVO.md)
 
-- El compilador de React no está habilitado por defecto.
-- Se recomienda usar TypeScript para proyectos en producción.
+### Resumen rápido
 
-## Backend
+```bash
+# Clonar el repositorio
+git clone -b union-peticiones --single-branch https://github.com/kharesban/ProyectoIngSoftware2.git
 
-El backend está desarrollado en Node.js y se conecta a una base de datos MySQL usando Sequelize.
-=======
-# React + Vite
+# Instalar dependencias
+npm install
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Configurar variables de entorno (crear archivo .env)
+# DB_HOST=localhost, DB_USER, DB_PASSWORD, DB_NAME=ecomart_db, PORT=3000
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
->>>>>>> bd
+# Ejecutar el proyecto
+npm start
