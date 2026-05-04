@@ -39,4 +39,4 @@ npm install
 # DB_HOST=localhost, DB_USER, DB_PASSWORD, DB_NAME=ecomart_db, PORT=3000
 
 # Ejecutar el proyecto
-npm start
+npm run dev en front en un terminal y npm run dev/node server.js en el back en otro terminal
