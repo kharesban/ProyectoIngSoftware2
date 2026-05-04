@@ -34,8 +34,12 @@
 
 ### Parte C (Ejecutar el proyecto):
 
-1. En la terminal, ejecutar:
+1. En la terminal, ejecutar para hacer uso del backEnd:
 
-        npm start
+        npm run start 
+
+2. En la terminal, ejecutar ejecutar para hacer uso del FrontEnd:
+
+        npm run dev 
 
 2. Abrir http://localhost:3000 en el navegador
