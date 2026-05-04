@@ -9,6 +9,18 @@ Antes de comenzar, asegúrate de tener instalado:
 - MySQL Workbench
 - Git
 
+### Dependencias del proyecto
+
+```bash
+# Frontend
+npm install react react-dom react-router-dom
+
+# Backend
+npm install express sequelize mysql2 dotenv cors bcryptjs
+
+# Desarrollo y pruebas
+npm install -D vite @vitejs/plugin-react eslint nodemon jest babel-jest jest-environment-jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event @babel/preset-env @babel/preset-react
+
 ## Instalación y ejecución
 
 ### 📖 Instrucciones detalladas
