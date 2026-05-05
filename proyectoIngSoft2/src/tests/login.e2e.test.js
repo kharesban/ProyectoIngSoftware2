@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useState } from 'react';
 
-// 🔥 Componente simple (sin router, sin context, sin css)
 function FakeLogin() {
   const [user, setUser] = useState('');
   const [contra, setContra] = useState('');
