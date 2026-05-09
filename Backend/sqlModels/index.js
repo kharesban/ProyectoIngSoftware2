@@ -37,5 +37,8 @@ db.sequelize = sequelize;
 
 // Importar modelos aquí
 db.Usuario = require('./Usuarios')(sequelize, Sequelize);
+db.Producto = require('./Productos')(sequelize, Sequelize);
+
+
 
 module.exports = db;

@@ -143,6 +143,120 @@ app.delete('/api/usuarios/:id', async (req, res) => {
     }
 });
 
+// ============ RUTAS DE PRODUCTOS ============
+
+// GET - Obtener todos los productos
+app.get('/api/productos', async (req, res) => {
+    try {
+        const productos = await db.Producto.findAll();
+        res.json(productos);
+    } catch (error) {
+        console.error("Error al obtener productos:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// GET - Obtener producto por ID
+app.get('/api/productos/:id', async (req, res) => {
+    try {
+        const producto = await db.Producto.findByPk(req.params.id);
+
+        if (!producto) {
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        }
+
+        res.json(producto);
+    } catch (error) {
+        console.error("Error al obtener producto:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// POST - Crear nuevo producto
+app.post('/api/productos', async (req, res) => {
+    try {
+        const { nombre, descripcion, precio, stockDisponible, estado } = req.body;
+
+        if (!nombre || !descripcion || !precio || stockDisponible === undefined) {
+            return res.status(400).json({
+                error: 'Nombre, descripción, precio y stock son obligatorios'
+            });
+        }
+
+        const nuevoProducto = await db.Producto.create({
+            nombre: nombre,
+            descripcion: descripcion,
+            precio: precio,
+            stockDisponible: stockDisponible,
+            estado: estado || 'Disponible'
+        });
+
+        res.status(201).json({
+            mensaje: 'Producto creado correctamente',
+            producto: nuevoProducto
+        });
+
+    } catch (error) {
+        console.error("Error al crear producto:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// PUT - Actualizar producto
+app.put('/api/productos/:id', async (req, res) => {
+    try {
+        const producto = await db.Producto.findByPk(req.params.id);
+
+        if (!producto) {
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        }
+
+        const { nombre, descripcion, precio, stockDisponible, estado } = req.body;
+
+        await producto.update({
+            nombre: nombre || producto.nombre,
+            descripcion: descripcion || producto.descripcion,
+            precio: precio || producto.precio,
+            stockDisponible: stockDisponible !== undefined ? stockDisponible : producto.stockDisponible,
+            estado: estado || producto.estado
+        });
+
+        res.json({
+            mensaje: 'Producto actualizado correctamente',
+            producto: producto
+        });
+
+    } catch (error) {
+        console.error("Error al actualizar producto:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// DELETE - Eliminar producto
+app.delete('/api/productos/:id', async (req, res) => {
+    try {
+        const producto = await db.Producto.findByPk(req.params.id);
+
+        if (!producto) {
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        }
+
+        await producto.destroy();
+
+        res.json({
+            mensaje: 'Producto eliminado correctamente'
+        });
+
+    } catch (error) {
+        console.error("Error al eliminar producto:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Backend con Sequelize funcionando' });
