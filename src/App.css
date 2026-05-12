@@ -526,3 +526,124 @@ body {
   border-radius: 8px;
   margin-bottom: 10px;
 }
+
+.form-producto-input,
+.form-producto-select {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border: 1px solid #bdeee8;
+  border-radius: 10px;
+  background: #f8fffd;
+  color: #080035;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.form-producto-input:focus,
+.form-producto-select:focus {
+  border-color: #00c896;
+  box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.18);
+}
+
+.form-producto-input::placeholder {
+  color: #6f7f89;
+}
+
+.boton-crear-producto {
+  width: 100%;
+  background: linear-gradient(135deg, #12c6b4, #08c970);
+  color: white;
+  border: none;
+  padding: 13px 18px;
+  border-radius: 13px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: 0.2s ease;
+}
+
+.boton-crear-producto:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 200, 150, 0.28);
+}
+
+.boton-cancelar-edicion {
+  width: 100%;
+  background: #100047;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 13px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: 0.2s ease;
+}
+
+.boton-cancelar-edicion:hover {
+  background: #1d0b63;
+  transform: translateY(-2px);
+}
+
+.acciones-carrito {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+}
+
+.precio-item-carrito {
+  color: #080035;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.botones-cantidad-carrito {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.boton-cantidad-carrito {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #12c6b4, #08c970);
+  color: white;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.boton-cantidad-carrito:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 16px rgba(0, 200, 150, 0.28);
+}
+
+.boton-eliminar-item-carrito {
+  width: 100%;
+  border: none;
+  border-radius: 11px;
+  padding: 10px 16px;
+  background: #100047;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.boton-eliminar-item-carrito:hover {
+  background: #1d0b63;
+  transform: translateY(-2px);
+}

@@ -23,6 +23,7 @@ import SemillasHuerta from "../assets/ImagenesProductos/SemillasHuerta.png";
 import ComposteraDomestica from "../assets/ImagenesProductos/ComposteraDomestica.png";
 import CuadernoReciclado from "../assets/ImagenesProductos/CuadernoReciclado.png";
 import LapicesReciclados from "../assets/ImagenesProductos/LapicesReciclados.png";
+import ProductoEnProceso from "../assets/ImagenesProductos/ProductoEnProceso.png";
 
 const API_PRODUCTOS = "http://localhost:3000/api/productos";
 
@@ -49,8 +50,9 @@ const obtenerImagenProducto = (nombre) => {
   if (texto.includes("compostera")) return ComposteraDomestica;
   if (texto.includes("cuaderno")) return CuadernoReciclado;
   if (texto.includes("lapiz") || texto.includes("lápiz")) return LapicesReciclados;
+  if (texto.includes("bolsa") || texto.includes("tela")) return BolsaTela;
 
-  return BolsaTela;
+  return ProductoEnProceso;
 };
 
 const Dashboard = () => {
@@ -115,35 +117,39 @@ const Dashboard = () => {
     navigate("/carrito");
   };
 
-  const agregarAlCarrito = (producto) => {
-    const carritoGuardado = localStorage.getItem("carritoEcoMarket");
-    const carritoActual = carritoGuardado ? JSON.parse(carritoGuardado) : [];
 
-    const productoExistente = carritoActual.find((item) => item.id === producto.id);
+  const agregarAlCarrito = async (producto) => {
+  if (!user || !user.id) {
+    alert("Debes iniciar sesión para agregar productos al carrito.");
+    navigate("/login");
+    return;
+  }
 
-    let nuevoCarrito;
+  try {
+    const respuesta = await fetch("http://localhost:3000/api/carrito", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        usuarioId: user.id,
+        productoId: producto.id
+      })
+    });
 
-    if (productoExistente) {
-      nuevoCarrito = carritoActual.map((item) =>
-        item.id === producto.id
-          ? { ...item, cantidad: item.cantidad + 1 }
-          : item
-      );
-    } else {
-      nuevoCarrito = [
-        ...carritoActual,
-        {
-          id: producto.id,
-          nombre: producto.nombre,
-          precio: Number(producto.precio),
-          cantidad: 1,
-        },
-      ];
+    const data = await respuesta.json();
+
+    if (!respuesta.ok) {
+      alert(data.error || "No se pudo agregar el producto al carrito.");
+      return;
     }
 
-    localStorage.setItem("carritoEcoMarket", JSON.stringify(nuevoCarrito));
-    alert(`${producto.nombre} agregado al carrito`);
-  };
+    alert(data.mensaje || "Producto agregado al carrito.");
+  } catch (error) {
+    console.error("Error al agregar al carrito:", error);
+    alert("No se pudo conectar con el backend.");
+  }
+};
 
   const handleChangeProducto = (e) => {
     const { name, value } = e.target;
@@ -525,61 +531,66 @@ const Dashboard = () => {
 
             <div className="lista-categorias">
               <input
-                type="text"
-                name="nombre"
-                placeholder="Nombre"
-                value={formProducto.nombre}
-                onChange={handleChangeProducto}
+              className="form-producto-input"
+              type="text"
+              name="nombre"
+              placeholder="Nombre"
+              value={formProducto.nombre}
+              onChange={handleChangeProducto}
               />
 
               <input
-                type="text"
-                name="descripcion"
-                placeholder="Descripción"
-                value={formProducto.descripcion}
-                onChange={handleChangeProducto}
+              className="form-producto-input"
+              type="text"
+              name="descripcion"
+              placeholder="Descripción"
+              value={formProducto.descripcion}
+              onChange={handleChangeProducto}
               />
 
               <input
-                type="number"
-                name="precio"
-                placeholder="Precio"
-                value={formProducto.precio}
-                onChange={handleChangeProducto}
+              className="form-producto-input"
+              type="number"
+              name="precio"
+              placeholder="Precio"
+              value={formProducto.precio}
+              onChange={handleChangeProducto}
               />
 
               <input
-                type="number"
-                name="stockDisponible"
-                placeholder="Stock"
-                value={formProducto.stockDisponible}
-                onChange={handleChangeProducto}
+              className="form-producto-input"
+              type="number"
+              name="stockDisponible"
+              placeholder="Stock"
+              value={formProducto.stockDisponible}
+              onChange={handleChangeProducto}
               />
 
-              <select
-                name="estado"
-                value={formProducto.estado}
-                onChange={handleChangeProducto}
-              >
-                <option value="Disponible">Disponible</option>
-                <option value="Agotado">Agotado</option>
-              </select>
+            <select
+            className="form-producto-select"
+            name="estado"
+            value={formProducto.estado}
+            onChange={handleChangeProducto}
+            >
+              <option value="Disponible">Disponible</option>
+            <option value="Agotado">Agotado</option>
+            </select>
 
-              {productoEditando ? (
-                <>
-                  <button className="boton-categoria" onClick={actualizarProducto}>
-                    Actualizar
-                  </button>
+        {productoEditando ? (
+          <>
+            <button className="boton-crear-producto" onClick={actualizarProducto}>
+              Actualizar producto
+            </button>
 
-                  <button className="boton-categoria" onClick={limpiarFormulario}>
-                    Cancelar
-                  </button>
-                </>
-              ) : (
-                <button className="boton-categoria" onClick={crearProducto}>
-                  Crear producto
-                </button>
-              )}
+            <button className="boton-cancelar-edicion" onClick={limpiarFormulario}>
+              Cancelar
+            </button>
+          </>
+        ) : (
+          <button className="boton-crear-producto" onClick={crearProducto}>
+            Crear producto
+          </button>
+        )}
             </div>
           </div>
         </aside>

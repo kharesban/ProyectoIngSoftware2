@@ -1,4 +1,4 @@
-const { Sequelize } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -11,7 +11,7 @@ const sequelize = new Sequelize(
     {
         host: process.env.DB_HOST,
         dialect: 'mysql',
-        logging: console.log, // Para ver las queries SQL
+        logging: console.log,
         pool: {
             max: 10,
             min: 0,
@@ -32,13 +32,43 @@ const sequelize = new Sequelize(
 })();
 
 const db = {};
+
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-// Importar modelos aquí
-db.Usuario = require('./Usuarios')(sequelize, Sequelize);
-db.Producto = require('./Productos')(sequelize, Sequelize);
+// Importar modelos
+db.Usuario = require('./Usuarios')(sequelize, DataTypes);
+db.Producto = require('./Productos')(sequelize, DataTypes);
+db.Carrito = require('./Carrito')(sequelize, DataTypes);
+db.ItemCarrito = require('./ItemCarrito')(sequelize, DataTypes);
 
+// Relaciones en Sequelize
 
+// Usuario -> Carrito
+db.Usuario.hasMany(db.Carrito, {
+    foreignKey: 'usuarioId'
+});
+
+db.Carrito.belongsTo(db.Usuario, {
+    foreignKey: 'usuarioId'
+});
+
+// Carrito -> ItemCarrito
+db.Carrito.hasMany(db.ItemCarrito, {
+    foreignKey: 'carritoId'
+});
+
+db.ItemCarrito.belongsTo(db.Carrito, {
+    foreignKey: 'carritoId'
+});
+
+// Producto -> ItemCarrito
+db.Producto.hasMany(db.ItemCarrito, {
+    foreignKey: 'productoId'
+});
+
+db.ItemCarrito.belongsTo(db.Producto, {
+    foreignKey: 'productoId'
+});
 
 module.exports = db;

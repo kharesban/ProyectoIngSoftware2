@@ -1,131 +1,235 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../Context/MyContext";
 import "../App.css";
 
-const Carrito = () => {
-    const navigate = useNavigate();
+const CarritoCompras = () => {
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
-    const [productosCarrito, setProductosCarrito] = useState(() => {
-        const carritoGuardado = localStorage.getItem("carritoEcoMarket");
-        return carritoGuardado ? JSON.parse(carritoGuardado) : [];
-    });
+  const [carrito, setCarrito] = useState(null);
+  const [items, setItems] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
-    const total = productosCarrito.reduce(
-        (acc, item) => acc + item.precio * item.cantidad,
-        0
-    );
+  const cargarCarrito = async () => {
+    if (!user || !user.id) {
+      alert("Debes iniciar sesión para ver tu carrito.");
+      navigate("/login");
+      return;
+    }
 
-    const aumentarCantidad = (id) => {
-        const nuevoCarrito = productosCarrito.map((item) =>
-            item.id === id ? { ...item, cantidad: item.cantidad + 1 } : item
-        );
+    try {
+      setCargando(true);
 
-        setProductosCarrito(nuevoCarrito);
-        localStorage.setItem("carritoEcoMarket", JSON.stringify(nuevoCarrito));
-    };
+      const respuesta = await fetch(`http://localhost:3000/api/carrito/${user.id}`);
+      const data = await respuesta.json();
 
-    const disminuirCantidad = (id) => {
-        const nuevoCarrito = productosCarrito
-        .map((item) =>
-            item.id === id ? { ...item, cantidad: item.cantidad - 1 } : item
-        )
-        .filter((item) => item.cantidad > 0);
+      if (!respuesta.ok) {
+        alert(data.error || "No se pudo cargar el carrito.");
+        return;
+      }
 
-        setProductosCarrito(nuevoCarrito);
-        localStorage.setItem("carritoEcoMarket", JSON.stringify(nuevoCarrito));
-    };
+      setCarrito(data);
+      setItems(data.ItemCarritos || []);
+    } catch (error) {
+      console.error("Error al cargar carrito:", error);
+      alert("No se pudo conectar con el backend.");
+    } finally {
+      setCargando(false);
+    }
+  };
 
-    const eliminarProducto = (id) => {
-        const nuevoCarrito = productosCarrito.filter((item) => item.id !== id);
+  useEffect(() => {
+    cargarCarrito();
+  }, []);
 
-        setProductosCarrito(nuevoCarrito);
-        localStorage.setItem("carritoEcoMarket", JSON.stringify(nuevoCarrito));
-    };
+  const aumentarCantidad = async (item) => {
+    await actualizarCantidad(item.id, item.cantidad + 1);
+  };
 
-    const vaciarCarrito = () => {
-        setProductosCarrito([]);
-        localStorage.removeItem("carritoEcoMarket");
-    };
+  const disminuirCantidad = async (item) => {
+    await actualizarCantidad(item.id, item.cantidad - 1);
+  };
 
-    const pagarCarrito = () => {
-        if (productosCarrito.length === 0) {
-            alert("El carrito está vacío.");
-            return;
-        }
+  const actualizarCantidad = async (itemId, nuevaCantidad) => {
+    try {
+      const respuesta = await fetch(`http://localhost:3000/api/carrito/item/${itemId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          cantidad: nuevaCantidad
+        })
+      });
 
-        alert("Compra realizada exitosamente.");
-        vaciarCarrito();
-        navigate("/dashboard");
-    };
+      const data = await respuesta.json();
 
-    return (
-        <div className="pagina-carrito">
-            <header className="barra-superior">
-                <div>
-                    <h1>EcoMarket</h1>
-                    <p>Compra productos sostenibles de forma fácil y segura</p>
-                </div>
+      if (!respuesta.ok) {
+        alert(data.error || "No se pudo actualizar el carrito.");
+        return;
+      }
 
-                <button className="boton-secundario" onClick={() => navigate("/dashboard")}>
-                    Volver al dashboard
-                </button>
-            </header>
+      cargarCarrito();
+    } catch (error) {
+      console.error("Error al actualizar cantidad:", error);
+      alert("No se pudo conectar con el backend.");
+    }
+  };
 
-            <main className="contenedor-carrito">
-                <section className="seccion-panel">
-                    <h2>Productos en el carrito</h2>
-                        {productosCarrito.length === 0 ? (
-                            <p>No tienes productos en el carrito.</p>
-                        ) : (
-                            <div className="lista-carrito">
+  const eliminarItem = async (itemId) => {
+    try {
+      const respuesta = await fetch(`http://localhost:3000/api/carrito/item/${itemId}`, {
+        method: "DELETE"
+      });
 
-                                {productosCarrito.map((producto) => (
-                                    <div key={producto.id} className="producto-carrito">
-                                        <div>
-                                            <h3>{producto.nombre}</h3>
-                                            <p>{producto.categoria}</p>
-                                            <p>Precio unitario: <strong>${producto.precio}</strong></p>
-                                            <p>Cantidad: {producto.cantidad}</p>
-                                        </div>
+      const data = await respuesta.json();
 
-                                        <div className="acciones-carrito">
-                                            <strong>${producto.precio * producto.cantidad}</strong>
+      if (!respuesta.ok) {
+        alert(data.error || "No se pudo eliminar el producto.");
+        return;
+      }
 
-                                            <div className="botones-cantidad">
-                                                <button onClick={() => disminuirCantidad(producto.id)}>
-                                                    -
-                                                </button>
-                                                <button onClick={() => aumentarCantidad(producto.id)}>
-                                                    +
-                                                </button>
-                                            </div>
+      cargarCarrito();
+    } catch (error) {
+      console.error("Error al eliminar item:", error);
+      alert("No se pudo conectar con el backend.");
+    }
+  };
 
-                                            <button className="boton-eliminar" onClick={() => eliminarProducto(producto.id)}>
-                                                Eliminar
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                </section>
+  const vaciarCarrito = async () => {
+    if (!user || !user.id) return;
 
-                <aside className="resumen-carrito">
-                    <h3>Resumen</h3>
-                    <p>Total de productos: {productosCarrito.length}</p>
-                    <p className="total-carrito">Total a pagar: ${total}</p>
+    const confirmar = confirm("¿Seguro que deseas vaciar el carrito?");
 
-                    <button className="boton-principal" onClick={pagarCarrito}>
-                        Proceder al pago
-                    </button>
+    if (!confirmar) return;
 
-                    <button className="boton-vaciar" onClick={vaciarCarrito}>
-                        Vaciar carrito
-                    </button>
-                </aside>
-            </main>
+    try {
+      const respuesta = await fetch(`http://localhost:3000/api/carrito/usuario/${user.id}`, {
+        method: "DELETE"
+      });
+
+      const data = await respuesta.json();
+
+      if (!respuesta.ok) {
+        alert(data.error || "No se pudo vaciar el carrito.");
+        return;
+      }
+
+      cargarCarrito();
+    } catch (error) {
+      console.error("Error al vaciar carrito:", error);
+      alert("No se pudo conectar con el backend.");
+    }
+  };
+
+  const volverDashboard = () => {
+    navigate("/dashboard");
+  };
+
+  const totalProductos = items.reduce((total, item) => {
+    return total + item.cantidad;
+  }, 0);
+
+  const totalPagar = Number(carrito?.total || 0);
+
+  return (
+    <div className="pagina-dashboard">
+      <header className="barra-superior">
+        <div>
+          <h1>EcoMarket</h1>
+          <p>Compra productos sostenibles de forma fácil y segura</p>
         </div>
-    );
+
+        <button className="boton-carrito" onClick={volverDashboard}>
+          Volver al dashboard
+        </button>
+      </header>
+
+      <main className="contenedor-usuario">
+        <section className="contenido-tienda">
+          <section className="seccion-panel">
+            <h2>Productos en el carrito</h2>
+
+            {cargando ? (
+              <p>Cargando carrito...</p>
+            ) : items.length === 0 ? (
+              <p className="mensaje-sin-productos">
+                Tu carrito está vacío.
+              </p>
+            ) : (
+              <div className="lista-carrito">
+                {items.map((item) => (
+                  <div className="item-carrito" key={item.id}>
+                    <div>
+                      <h3>{item.Producto?.nombre}</h3>
+
+                      <p>
+                        Precio unitario:{" "}
+                        <strong>
+                          ${Number(item.precioUnitario).toLocaleString()}
+                        </strong>
+                      </p>
+
+                      <p>
+                        Cantidad: <strong>{item.cantidad}</strong>
+                      </p>
+                    </div>
+                    <div className="acciones-carrito">
+                    <h3 className="precio-item-carrito">
+                        ${Number(item.total).toLocaleString()}
+                    </h3>
+
+                    <div className="botones-cantidad-carrito">
+                        <button
+                        className="boton-cantidad-carrito"
+                        onClick={() => disminuirCantidad(item)}
+                        >
+                        -
+                        </button>
+
+                        <button
+                        className="boton-cantidad-carrito"
+                        onClick={() => aumentarCantidad(item)}
+                        >
+                        +
+                        </button>
+                    </div>
+
+                    <button
+                        className="boton-eliminar-item-carrito"
+                        onClick={() => eliminarItem(item.id)}
+                    >
+                        Eliminar
+                    </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </section>
+
+        <aside className="panel-cuenta">
+          <h2>Resumen</h2>
+
+          <p>Total de productos: {totalProductos}</p>
+
+          <h3>
+            Total a pagar: ${totalPagar.toLocaleString()}
+          </h3>
+
+          <button className="boton-agregar">
+            Proceder al pago
+          </button>
+
+          <button className="boton-cerrar-sesion" onClick={vaciarCarrito}>
+            Vaciar carrito
+          </button>
+        </aside>
+      </main>
+    </div>
+  );
 };
 
-export default Carrito;
+export default CarritoCompras;

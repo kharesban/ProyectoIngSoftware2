@@ -257,6 +257,258 @@ app.delete('/api/productos/:id', async (req, res) => {
     }
 });
 
+// ============ RUTAS DE CARRITO ============
+
+const recalcularTotalCarrito = async (carritoId) => {
+    const items = await db.ItemCarrito.findAll({
+        where: { carritoId: carritoId }
+    });
+
+    const total = items.reduce((suma, item) => {
+        return suma + Number(item.total);
+    }, 0);
+
+    const carrito = await db.Carrito.findByPk(carritoId);
+
+    if (carrito) {
+        await carrito.update({
+            total: total
+        });
+    }
+
+    return total;
+};
+
+
+// GET - Obtener carrito activo de un usuario
+app.get('/api/carrito/:usuarioId', async (req, res) => {
+    try {
+        const { usuarioId } = req.params;
+
+        const carrito = await db.Carrito.findOne({
+            where: {
+                usuarioId: usuarioId,
+                estado: 'Activo'
+            },
+            include: [
+                {
+                    model: db.ItemCarrito,
+                    include: [
+                        {
+                            model: db.Producto
+                        }
+                    ]
+                }
+            ]
+        });
+
+        if (!carrito) {
+            return res.json({
+                id: null,
+                usuarioId: Number(usuarioId),
+                estado: 'Activo',
+                total: 0,
+                ItemCarritos: []
+            });
+        }
+
+        res.json(carrito);
+
+    } catch (error) {
+        console.error("Error al obtener carrito:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// POST - Agregar producto al carrito
+app.post('/api/carrito', async (req, res) => {
+    try {
+        const { usuarioId, productoId } = req.body;
+
+        if (!usuarioId || !productoId) {
+            return res.status(400).json({
+                error: 'usuarioId y productoId son obligatorios'
+            });
+        }
+
+        const producto = await db.Producto.findByPk(productoId);
+
+        if (!producto) {
+            return res.status(404).json({
+                error: 'Producto no encontrado'
+            });
+        }
+
+        let carrito = await db.Carrito.findOne({
+            where: {
+                usuarioId: usuarioId,
+                estado: 'Activo'
+            }
+        });
+
+        if (!carrito) {
+            carrito = await db.Carrito.create({
+                usuarioId: usuarioId,
+                estado: 'Activo',
+                total: 0
+            });
+        }
+
+        let item = await db.ItemCarrito.findOne({
+            where: {
+                carritoId: carrito.id,
+                productoId: productoId
+            }
+        });
+
+        const precioUnitario = Number(producto.precio);
+
+        if (item) {
+            const nuevaCantidad = item.cantidad + 1;
+
+            await item.update({
+                cantidad: nuevaCantidad,
+                total: nuevaCantidad * precioUnitario
+            });
+        } else {
+            item = await db.ItemCarrito.create({
+                carritoId: carrito.id,
+                productoId: productoId,
+                cantidad: 1,
+                precioUnitario: precioUnitario,
+                total: precioUnitario
+            });
+        }
+
+        await recalcularTotalCarrito(carrito.id);
+
+        res.status(201).json({
+            mensaje: 'Producto agregado al carrito',
+            item: item
+        });
+
+    } catch (error) {
+        console.error("Error al agregar al carrito:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// PUT - Actualizar cantidad de un item del carrito
+app.put('/api/carrito/item/:itemId', async (req, res) => {
+    try {
+        const { itemId } = req.params;
+        const { cantidad } = req.body;
+
+        const item = await db.ItemCarrito.findByPk(itemId);
+
+        if (!item) {
+            return res.status(404).json({
+                error: 'Item no encontrado en el carrito'
+            });
+        }
+
+        if (cantidad <= 0) {
+            const carritoId = item.carritoId;
+
+            await item.destroy();
+            await recalcularTotalCarrito(carritoId);
+
+            return res.json({
+                mensaje: 'Producto eliminado del carrito'
+            });
+        }
+
+        const nuevoTotal = cantidad * Number(item.precioUnitario);
+
+        await item.update({
+            cantidad: cantidad,
+            total: nuevoTotal
+        });
+
+        await recalcularTotalCarrito(item.carritoId);
+
+        res.json({
+            mensaje: 'Cantidad actualizada',
+            item: item
+        });
+
+    } catch (error) {
+        console.error("Error al actualizar item:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// DELETE - Eliminar un item del carrito
+app.delete('/api/carrito/item/:itemId', async (req, res) => {
+    try {
+        const { itemId } = req.params;
+
+        const item = await db.ItemCarrito.findByPk(itemId);
+
+        if (!item) {
+            return res.status(404).json({
+                error: 'Item no encontrado en el carrito'
+            });
+        }
+
+        const carritoId = item.carritoId;
+
+        await item.destroy();
+        await recalcularTotalCarrito(carritoId);
+
+        res.json({
+            mensaje: 'Producto eliminado del carrito'
+        });
+
+    } catch (error) {
+        console.error("Error al eliminar item:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// DELETE - Vaciar carrito activo de un usuario
+app.delete('/api/carrito/usuario/:usuarioId', async (req, res) => {
+    try {
+        const { usuarioId } = req.params;
+
+        const carrito = await db.Carrito.findOne({
+            where: {
+                usuarioId: usuarioId,
+                estado: 'Activo'
+            }
+        });
+
+        if (!carrito) {
+            return res.json({
+                mensaje: 'El usuario no tiene carrito activo'
+            });
+        }
+
+        await db.ItemCarrito.destroy({
+            where: {
+                carritoId: carrito.id
+            }
+        });
+
+        await carrito.update({
+            total: 0
+        });
+
+        res.json({
+            mensaje: 'Carrito vaciado correctamente'
+        });
+
+    } catch (error) {
+        console.error("Error al vaciar carrito:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Backend con Sequelize funcionando' });
