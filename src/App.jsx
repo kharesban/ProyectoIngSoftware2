@@ -4,6 +4,7 @@ import Login from "./Paginas/Login";
 import Register from "./Paginas/Register";
 import Dashboard from "./Paginas/dashboard";
 import Carrito from "./Paginas/CarritoCompras";
+import PasarelaPagos from "./Paginas/PasarelaPagos";
 
 function App() {
   return (
@@ -29,6 +30,15 @@ function App() {
           element={
             <PrivateRoute>
               <Carrito />
+            </PrivateRoute>
+          }
+        />
+
+        <Route 
+          path="/pasarela-pagos"
+          element={
+            <PrivateRoute>
+              <PasarelaPagos />
             </PrivateRoute>
           }
         />

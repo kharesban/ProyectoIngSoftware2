@@ -43,14 +43,6 @@ const CarritoCompras = () => {
     cargarCarrito();
   }, []);
 
-  const aumentarCantidad = async (item) => {
-    await actualizarCantidad(item.id, item.cantidad + 1);
-  };
-
-  const disminuirCantidad = async (item) => {
-    await actualizarCantidad(item.id, item.cantidad - 1);
-  };
-
   const actualizarCantidad = async (itemId, nuevaCantidad) => {
     try {
       const respuesta = await fetch(`http://localhost:3000/api/carrito/item/${itemId}`, {
@@ -77,6 +69,14 @@ const CarritoCompras = () => {
     }
   };
 
+  const aumentarCantidad = async (item) => {
+    await actualizarCantidad(item.id, item.cantidad + 1);
+  };
+
+  const disminuirCantidad = async (item) => {
+    await actualizarCantidad(item.id, item.cantidad - 1);
+  };
+
   const eliminarItem = async (itemId) => {
     try {
       const respuesta = await fetch(`http://localhost:3000/api/carrito/item/${itemId}`, {
@@ -100,7 +100,7 @@ const CarritoCompras = () => {
   const vaciarCarrito = async () => {
     if (!user || !user.id) return;
 
-    const confirmar = confirm("¿Seguro que deseas vaciar el carrito?");
+    const confirmar = window.confirm("¿Seguro que deseas vaciar el carrito?");
 
     if (!confirmar) return;
 
@@ -132,6 +132,28 @@ const CarritoCompras = () => {
   }, 0);
 
   const totalPagar = Number(carrito?.total || 0);
+
+  const procederAlPago = () => {
+    if (items.length === 0) {
+      alert("No puedes proceder al pago porque el carrito está vacío.");
+      return;
+    }
+
+    if (totalPagar <= 0) {
+      alert("El total del carrito no es válido.");
+      return;
+    }
+
+    navigate("/pasarela-pagos", {
+      state: {
+        carritoId: carrito?.id,
+        usuarioId: user.id,
+        productos: items,
+        totalProductos,
+        totalPagar
+      }
+    });
+  };
 
   return (
     <div className="pagina-dashboard">
@@ -167,7 +189,7 @@ const CarritoCompras = () => {
                       <p>
                         Precio unitario:{" "}
                         <strong>
-                          ${Number(item.precioUnitario).toLocaleString()}
+                          ${Number(item.precioUnitario).toLocaleString("es-CO")}
                         </strong>
                       </p>
 
@@ -175,33 +197,34 @@ const CarritoCompras = () => {
                         Cantidad: <strong>{item.cantidad}</strong>
                       </p>
                     </div>
+
                     <div className="acciones-carrito">
-                    <h3 className="precio-item-carrito">
-                        ${Number(item.total).toLocaleString()}
-                    </h3>
+                      <h3 className="precio-item-carrito">
+                        ${Number(item.total).toLocaleString("es-CO")}
+                      </h3>
 
-                    <div className="botones-cantidad-carrito">
+                      <div className="botones-cantidad-carrito">
                         <button
-                        className="boton-cantidad-carrito"
-                        onClick={() => disminuirCantidad(item)}
+                          className="boton-cantidad-carrito"
+                          onClick={() => disminuirCantidad(item)}
                         >
-                        -
+                          -
                         </button>
 
                         <button
-                        className="boton-cantidad-carrito"
-                        onClick={() => aumentarCantidad(item)}
+                          className="boton-cantidad-carrito"
+                          onClick={() => aumentarCantidad(item)}
                         >
-                        +
+                          +
                         </button>
-                    </div>
+                      </div>
 
-                    <button
+                      <button
                         className="boton-eliminar-item-carrito"
                         onClick={() => eliminarItem(item.id)}
-                    >
+                      >
                         Eliminar
-                    </button>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -216,10 +239,10 @@ const CarritoCompras = () => {
           <p>Total de productos: {totalProductos}</p>
 
           <h3>
-            Total a pagar: ${totalPagar.toLocaleString()}
+            Total a pagar: ${totalPagar.toLocaleString("es-CO")}
           </h3>
 
-          <button className="boton-agregar">
+          <button className="boton-agregar" onClick={procederAlPago}>
             Proceder al pago
           </button>
 

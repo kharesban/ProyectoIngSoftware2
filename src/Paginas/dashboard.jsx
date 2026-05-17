@@ -391,7 +391,7 @@ const Dashboard = () => {
                     </button>
 
                     {productoExpandido === producto.id && (
-                      <div className="informacion-expandido">
+                      <div className="informacion-expandida">
                         <img
                           src={obtenerImagenProducto(producto.nombre)}
                           alt={producto.nombre}
