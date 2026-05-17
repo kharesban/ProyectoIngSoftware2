@@ -508,6 +508,241 @@ app.delete('/api/carrito/usuario/:usuarioId', async (req, res) => {
     }
 });
 
+// ============ FUNCIONES DE PAGO ============
+
+const validarLuhn = (numeroTarjeta) => {
+    const numeroLimpio = numeroTarjeta.replace(/\D/g, "");
+
+    if (numeroLimpio.length < 13 || numeroLimpio.length > 19) {
+        return false;
+    }
+
+    let suma = 0;
+    let duplicar = false;
+
+    for (let i = numeroLimpio.length - 1; i >= 0; i--) {
+        let digito = parseInt(numeroLimpio[i], 10);
+
+        if (duplicar) {
+            digito = digito * 2;
+
+            if (digito > 9) {
+                digito = digito - 9;
+            }
+        }
+
+        suma = suma + digito;
+        duplicar = !duplicar;
+    }
+
+    return suma % 10 === 0;
+};
+
+const validarFechaExpiracion = (fecha) => {
+    const formatoValido = /^(0[1-9]|1[0-2])\/\d{2}$/.test(fecha);
+
+    if (!formatoValido) {
+        return false;
+    }
+
+    const [mesTexto, anioTexto] = fecha.split("/");
+    const mes = parseInt(mesTexto, 10);
+    const anio = parseInt(`20${anioTexto}`, 10);
+
+    const fechaActual = new Date();
+    const mesActual = fechaActual.getMonth() + 1;
+    const anioActual = fechaActual.getFullYear();
+
+    if (anio < anioActual) {
+        return false;
+    }
+
+    if (anio === anioActual && mes < mesActual) {
+        return false;
+    }
+
+    return true;
+};
+
+
+// POST - Procesar pago
+app.post('/api/pagos/procesar', async (req, res) => {
+    const transaction = await db.sequelize.transaction();
+
+    try {
+        const {
+            usuarioId,
+            metodoPago,
+            nombreTitular,
+            numeroTarjeta,
+            fechaExpiracion,
+            cvv
+        } = req.body;
+
+        if (!usuarioId || !metodoPago || !nombreTitular) {
+            await transaction.rollback();
+            return res.status(400).json({
+                error: 'Faltan datos obligatorios para procesar el pago'
+            });
+        }
+
+        const carrito = await db.Carrito.findOne({
+            where: {
+                usuarioId: usuarioId,
+                estado: 'Activo'
+            },
+            include: [
+                {
+                    model: db.ItemCarrito,
+                    include: [
+                        {
+                            model: db.Producto
+                        }
+                    ]
+                }
+            ],
+            transaction
+        });
+
+        if (!carrito) {
+            await transaction.rollback();
+            return res.status(404).json({
+                error: 'No hay carrito activo para este usuario'
+            });
+        }
+
+        if (!carrito.ItemCarritos || carrito.ItemCarritos.length === 0) {
+            await transaction.rollback();
+            return res.status(400).json({
+                error: 'El carrito está vacío'
+            });
+        }
+
+        const total = Number(carrito.total);
+
+        if (total <= 0) {
+            await transaction.rollback();
+            return res.status(400).json({
+                error: 'El total del carrito no es válido'
+            });
+        }
+
+        let ultimosDigitos = "N/A";
+
+        if (metodoPago === "credito" || metodoPago === "debito") {
+            if (!numeroTarjeta || !fechaExpiracion || !cvv) {
+                await transaction.rollback();
+                return res.status(400).json({
+                    error: 'Los datos de la tarjeta son obligatorios'
+                });
+            }
+
+            if (!validarLuhn(numeroTarjeta)) {
+                await transaction.rollback();
+                return res.status(400).json({
+                    error: 'Número de tarjeta inválido según el algoritmo de Luhn'
+                });
+            }
+
+            if (!validarFechaExpiracion(fechaExpiracion)) {
+                await transaction.rollback();
+                return res.status(400).json({
+                    error: 'La fecha de vencimiento es inválida o la tarjeta está vencida'
+                });
+            }
+
+            if (!/^\d{3,4}$/.test(cvv)) {
+                await transaction.rollback();
+                return res.status(400).json({
+                    error: 'CVV inválido'
+                });
+            }
+
+            const numeroLimpio = numeroTarjeta.replace(/\D/g, "");
+            ultimosDigitos = numeroLimpio.slice(-4);
+        }
+
+        // Validar stock antes de aprobar la compra
+        for (const item of carrito.ItemCarritos) {
+            const producto = item.Producto;
+
+            if (!producto) {
+                await transaction.rollback();
+                return res.status(404).json({
+                    error: 'Uno de los productos del carrito no existe'
+                });
+            }
+
+            if (producto.stockDisponible < item.cantidad) {
+                await transaction.rollback();
+                return res.status(400).json({
+                    error: `No hay stock suficiente para el producto: ${producto.nombre}`
+                });
+            }
+        }
+
+        // Descontar stock de cada producto
+        for (const item of carrito.ItemCarritos) {
+            const producto = item.Producto;
+            const nuevoStock = producto.stockDisponible - item.cantidad;
+
+            await producto.update({
+                stockDisponible: nuevoStock,
+                estado: nuevoStock <= 0 ? 'Agotado' : producto.estado
+            }, { transaction });
+        }
+
+        // Registrar pago
+        const pago = await db.Pago.create({
+            carritoId: carrito.id,
+            usuarioId: usuarioId,
+            metodoPago: metodoPago,
+            ultimosDigitos: ultimosDigitos,
+            total: total,
+            estado: 'Aprobado',
+            fechaPago: new Date()
+        }, { transaction });
+
+        // Cambiar estado del carrito
+        await carrito.update({
+            estado: 'Pagado'
+        }, { transaction });
+
+        await transaction.commit();
+
+        res.status(201).json({
+            mensaje: 'Pago aprobado correctamente',
+            pago: pago
+        });
+
+    } catch (error) {
+        await transaction.rollback();
+        console.error("Error al procesar pago:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// GET - Obtener pagos de un usuario
+app.get('/api/pagos/usuario/:usuarioId', async (req, res) => {
+    try {
+        const { usuarioId } = req.params;
+
+        const pagos = await db.Pago.findAll({
+            where: {
+                usuarioId: usuarioId
+            },
+            order: [['fechaPago', 'DESC']]
+        });
+
+        res.json(pagos);
+
+    } catch (error) {
+        console.error("Error al obtener pagos:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {

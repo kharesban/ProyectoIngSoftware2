@@ -41,6 +41,7 @@ db.Usuario = require('./Usuarios')(sequelize, DataTypes);
 db.Producto = require('./Productos')(sequelize, DataTypes);
 db.Carrito = require('./Carrito')(sequelize, DataTypes);
 db.ItemCarrito = require('./ItemCarrito')(sequelize, DataTypes);
+db.Pago = require('./Pago')(sequelize, DataTypes);
 
 // Relaciones en Sequelize
 
@@ -69,6 +70,24 @@ db.Producto.hasMany(db.ItemCarrito, {
 
 db.ItemCarrito.belongsTo(db.Producto, {
     foreignKey: 'productoId'
+});
+
+// Carrito -> Pago
+db.Carrito.hasOne(db.Pago, {
+    foreignKey: 'carritoId'
+});
+
+db.Pago.belongsTo(db.Carrito, {
+    foreignKey: 'carritoId'
+});
+
+// Usuario -> Pago
+db.Usuario.hasMany(db.Pago, {
+    foreignKey: 'usuarioId'
+});
+
+db.Pago.belongsTo(db.Usuario, {
+    foreignKey: 'usuarioId'
 });
 
 module.exports = db;

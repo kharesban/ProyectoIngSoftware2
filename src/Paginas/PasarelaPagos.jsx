@@ -50,7 +50,7 @@ const PasarelaPagos = () => {
   const totalPagar = Number(datosPago.totalPagar || 0);
   const usuarioId = datosPago.usuarioId;
 
-  const validarLuhn = (numeroTarjeta) => {
+    const validarLuhn = (numeroTarjeta) => {
     const numeroLimpio = numeroTarjeta.replace(/\D/g, "");
 
     if (numeroLimpio.length < 13 || numeroLimpio.length > 19) {
@@ -104,6 +104,7 @@ const PasarelaPagos = () => {
     return true;
   };
 
+
   const validarCampos = () => {
     const nuevosErrores = {};
 
@@ -139,7 +140,7 @@ const PasarelaPagos = () => {
       }
     }
 
-    if (metodoPago === "credito" || metodoPago === "debito") {
+      if (metodoPago === "credito" || metodoPago === "debito") {
       if (!datosTarjeta.nombreTitular.trim()) {
         nuevosErrores.nombreTitular = "El nombre del titular es obligatorio.";
       }
@@ -220,27 +221,52 @@ const PasarelaPagos = () => {
 
     setProcesando(true);
 
-    const ultimosDigitos = datosTarjeta.numeroTarjeta
-      ? datosTarjeta.numeroTarjeta.replace(/\D/g, "").slice(-4)
-      : null;
+    try {
+      const datosParaBackend = {
+        usuarioId: usuarioId,
+        metodoPago: metodoPago,
+        nombreTitular:
+          metodoPago === "contraEntrega"
+            ? datosCliente.nombre
+            : datosTarjeta.nombreTitular,
+        numeroTarjeta:
+          metodoPago === "contraEntrega"
+            ? null
+            : datosTarjeta.numeroTarjeta,
+        fechaExpiracion:
+          metodoPago === "contraEntrega"
+            ? null
+            : datosTarjeta.fechaVencimiento,
+        cvv:
+          metodoPago === "contraEntrega"
+            ? null
+            : datosTarjeta.cvv
+      };
 
-    const resumenPago = {
-      usuarioId,
-      cliente: datosCliente,
-      metodoPago,
-      totalProductos,
-      totalPagar,
-      puntoPago: metodoPago === "contraEntrega" ? datosContraEntrega.puntoPago : null,
-      cuotas: metodoPago === "credito" ? datosTarjeta.cuotas : null,
-      tarjetaTerminadaEn: ultimosDigitos
-    };
+      const respuesta = await fetch("http://localhost:3000/api/pagos/procesar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(datosParaBackend)
+      });
 
-    console.log("Pago simulado registrado:", resumenPago);
+      const data = await respuesta.json();
 
-    await limpiarCarritoDespuesDelPago();
+      if (!respuesta.ok) {
+        alert(data.error || "No se pudo procesar el pago.");
+        setProcesando(false);
+        return;
+      }
 
-    setMensajeExito("Pago registrado correctamente. Tu pedido fue procesado.");
-    setProcesando(false);
+      setMensajeExito(data.mensaje || "Pago registrado correctamente. Tu pedido fue procesado.");
+      setProcesando(false);
+
+    } catch (error) {
+      console.error("Error al procesar el pago:", error);
+      alert("No se pudo conectar con el backend.");
+      setProcesando(false);
+    }
   };
 
   const volverAlCarrito = () => {
