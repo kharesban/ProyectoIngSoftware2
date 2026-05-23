@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "sonar": "npx @sonar/scan"
   },
   "dependencies": {
     "react": "^19.2.4",
@@ -19,6 +20,7 @@
     "@babel/preset-env": "^7.29.3",
     "@babel/preset-react": "^7.28.5",
     "@eslint/js": "^9.39.4",
+    "@sonar/scan": "^4.3.6",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
