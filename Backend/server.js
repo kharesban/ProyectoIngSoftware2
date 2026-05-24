@@ -1,15 +1,35 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const db = require('./sqlModels'); 
+const db = require('./sqlModels');
 
 dotenv.config();
 
 const app = express();
+
+app.disable('x-powered-by');
+
 const PORT = process.env.PORT || 3000;
 
+const corsOptions = {
+    origin: (origin, callback) => {
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://127.0.0.1:5173'
+        ];
+
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error('Origen no permitido por CORS'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 // Middlewares
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // ============ RUTAS DE USUARIOS ============
@@ -564,163 +584,225 @@ const validarFechaExpiracion = (fecha) => {
     return true;
 };
 
+class PagoError extends Error {
+    constructor(status, message) {
+        super(message);
+        this.status = status;
+    }
+}
 
-// POST - Procesar pago
-app.post('/api/pagos/procesar', async (req, res) => {
-    const transaction = await db.sequelize.transaction();
+const esPagoConTarjeta = (metodoPago) => {
+    return metodoPago === "credito" || metodoPago === "debito";
+};
 
-    try {
-        const {
-            usuarioId,
-            metodoPago,
-            nombreTitular,
-            numeroTarjeta,
-            fechaExpiracion,
-            cvv
-        } = req.body;
+const lanzarErrorPago = (status, message) => {
+    throw new PagoError(status, message);
+};
 
-        if (!usuarioId || !metodoPago || !nombreTitular) {
-            await transaction.rollback();
-            return res.status(400).json({
-                error: 'Faltan datos obligatorios para procesar el pago'
-            });
-        }
+const validarDatosObligatoriosPago = ({ usuarioId, metodoPago, nombreTitular }) => {
+    if (!usuarioId || !metodoPago || !nombreTitular) {
+        lanzarErrorPago(400, "Faltan datos obligatorios para procesar el pago");
+    }
+};
 
-        const carrito = await db.Carrito.findOne({
-            where: {
-                usuarioId: usuarioId,
-                estado: 'Activo'
-            },
-            include: [
-                {
-                    model: db.ItemCarrito,
-                    include: [
-                        {
-                            model: db.Producto
-                        }
-                    ]
-                }
-            ],
-            transaction
-        });
-
-        if (!carrito) {
-            await transaction.rollback();
-            return res.status(404).json({
-                error: 'No hay carrito activo para este usuario'
-            });
-        }
-
-        if (!carrito.ItemCarritos || carrito.ItemCarritos.length === 0) {
-            await transaction.rollback();
-            return res.status(400).json({
-                error: 'El carrito está vacío'
-            });
-        }
-
-        const total = Number(carrito.total);
-
-        if (total <= 0) {
-            await transaction.rollback();
-            return res.status(400).json({
-                error: 'El total del carrito no es válido'
-            });
-        }
-
-        let ultimosDigitos = "N/A";
-
-        if (metodoPago === "credito" || metodoPago === "debito") {
-            if (!numeroTarjeta || !fechaExpiracion || !cvv) {
-                await transaction.rollback();
-                return res.status(400).json({
-                    error: 'Los datos de la tarjeta son obligatorios'
-                });
+const obtenerCarritoActivoParaPago = async (usuarioId, transaction) => {
+    return db.Carrito.findOne({
+        where: {
+            usuarioId: usuarioId,
+            estado: "Activo"
+        },
+        include: [
+            {
+                model: db.ItemCarrito,
+                include: [
+                    {
+                        model: db.Producto
+                    }
+                ]
             }
+        ],
+        transaction
+    });
+};
 
-            if (!validarLuhn(numeroTarjeta)) {
-                await transaction.rollback();
-                return res.status(400).json({
-                    error: 'Número de tarjeta inválido según el algoritmo de Luhn'
-                });
-            }
+const validarCarritoParaPago = (carrito) => {
+    if (!carrito) {
+        lanzarErrorPago(404, "No hay carrito activo para este usuario");
+    }
 
-            if (!validarFechaExpiracion(fechaExpiracion)) {
-                await transaction.rollback();
-                return res.status(400).json({
-                    error: 'La fecha de vencimiento es inválida o la tarjeta está vencida'
-                });
-            }
+    if (!carrito.ItemCarritos || carrito.ItemCarritos.length === 0) {
+        lanzarErrorPago(400, "El carrito está vacío");
+    }
 
-            if (!/^\d{3,4}$/.test(cvv)) {
-                await transaction.rollback();
-                return res.status(400).json({
-                    error: 'CVV inválido'
-                });
-            }
+    const total = Number(carrito.total);
 
-            const numeroLimpio = numeroTarjeta.replace(/\D/g, "");
-            ultimosDigitos = numeroLimpio.slice(-4);
-        }
+    if (total <= 0) {
+        lanzarErrorPago(400, "El total del carrito no es válido");
+    }
 
-        // Validar stock antes de aprobar la compra
-        for (const item of carrito.ItemCarritos) {
-            const producto = item.Producto;
+    return total;
+};
 
-            if (!producto) {
-                await transaction.rollback();
-                return res.status(404).json({
-                    error: 'Uno de los productos del carrito no existe'
-                });
-            }
+const obtenerUltimosDigitosTarjeta = (numeroTarjeta) => {
+    const numeroLimpio = numeroTarjeta.replace(/\D/g, "");
+    return numeroLimpio.slice(-4);
+};
 
-            if (producto.stockDisponible < item.cantidad) {
-                await transaction.rollback();
-                return res.status(400).json({
-                    error: `No hay stock suficiente para el producto: ${producto.nombre}`
-                });
-            }
-        }
+const validarDatosTarjetaPago = ({ numeroTarjeta, fechaExpiracion, cvv }) => {
+    if (!numeroTarjeta || !fechaExpiracion || !cvv) {
+        lanzarErrorPago(400, "Los datos de la tarjeta son obligatorios");
+    }
 
-        // Descontar stock de cada producto
-        for (const item of carrito.ItemCarritos) {
-            const producto = item.Producto;
-            const nuevoStock = producto.stockDisponible - item.cantidad;
+    if (!validarLuhn(numeroTarjeta)) {
+        lanzarErrorPago(400, "Número de tarjeta inválido según el algoritmo de Luhn");
+    }
 
-            await producto.update({
+    if (!validarFechaExpiracion(fechaExpiracion)) {
+        lanzarErrorPago(400, "La fecha de vencimiento es inválida o la tarjeta está vencida");
+    }
+
+    if (!/^\d{3,4}$/.test(cvv)) {
+        lanzarErrorPago(400, "CVV inválido");
+    }
+
+    return obtenerUltimosDigitosTarjeta(numeroTarjeta);
+};
+
+const obtenerUltimosDigitosPago = ({ metodoPago, numeroTarjeta, fechaExpiracion, cvv }) => {
+    if (!esPagoConTarjeta(metodoPago)) {
+        return "N/A";
+    }
+
+    return validarDatosTarjetaPago({
+        numeroTarjeta,
+        fechaExpiracion,
+        cvv
+    });
+};
+
+const validarProductoDelCarrito = (item) => {
+    const producto = item.Producto;
+
+    if (!producto) {
+        lanzarErrorPago(404, "Uno de los productos del carrito no existe");
+    }
+
+    if (producto.stockDisponible < item.cantidad) {
+        lanzarErrorPago(
+            400,
+            `No hay stock suficiente para el producto: ${producto.nombre}`
+        );
+    }
+};
+
+const validarStockCarrito = (itemsCarrito) => {
+    itemsCarrito.forEach((item) => {
+        validarProductoDelCarrito(item);
+    });
+};
+
+const descontarStockCarrito = async (itemsCarrito, transaction) => {
+    for (const item of itemsCarrito) {
+        const producto = item.Producto;
+        const nuevoStock = producto.stockDisponible - item.cantidad;
+
+        await producto.update(
+            {
                 stockDisponible: nuevoStock,
-                estado: nuevoStock <= 0 ? 'Agotado' : producto.estado
-            }, { transaction });
-        }
+                estado: nuevoStock <= 0 ? "Agotado" : producto.estado
+            },
+            { transaction }
+        );
+    }
+};
 
-        // Registrar pago
-        const pago = await db.Pago.create({
+const registrarPago = async ({
+    carrito,
+    usuarioId,
+    metodoPago,
+    ultimosDigitos,
+    total,
+    transaction
+}) => {
+    return db.Pago.create(
+        {
             carritoId: carrito.id,
             usuarioId: usuarioId,
             metodoPago: metodoPago,
             ultimosDigitos: ultimosDigitos,
             total: total,
-            estado: 'Aprobado',
+            estado: "Aprobado",
             fechaPago: new Date()
-        }, { transaction });
+        },
+        { transaction }
+    );
+};
 
-        // Cambiar estado del carrito
-        await carrito.update({
-            estado: 'Pagado'
-        }, { transaction });
+const marcarCarritoComoPagado = async (carrito, transaction) => {
+    await carrito.update(
+        {
+            estado: "Pagado"
+        },
+        { transaction }
+    );
+};
 
-        await transaction.commit();
+// POST - Procesar pago
+    app.post("/api/pagos/procesar", async (req, res) => {
+        const transaction = await db.sequelize.transaction();
 
-        res.status(201).json({
-            mensaje: 'Pago aprobado correctamente',
-            pago: pago
-        });
+        try {
+            const {
+                usuarioId,
+                metodoPago,
+                numeroTarjeta,
+                fechaExpiracion,
+                cvv
+            } = req.body;
 
-    } catch (error) {
-        await transaction.rollback();
-        console.error("Error al procesar pago:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
+            validarDatosObligatoriosPago(req.body);
+
+            const carrito = await obtenerCarritoActivoParaPago(usuarioId, transaction);
+            const total = validarCarritoParaPago(carrito);
+
+            const ultimosDigitos = obtenerUltimosDigitosPago({
+                metodoPago,
+                numeroTarjeta,
+                fechaExpiracion,
+                cvv
+            });
+
+            validarStockCarrito(carrito.ItemCarritos);
+
+            await descontarStockCarrito(carrito.ItemCarritos, transaction);
+
+            const pago = await registrarPago({
+                carrito,
+                usuarioId,
+                metodoPago,
+                ultimosDigitos,
+                total,
+                transaction
+            });
+
+            await marcarCarritoComoPagado(carrito, transaction);
+
+            await transaction.commit();
+
+            return res.status(201).json({
+                mensaje: "Pago aprobado correctamente",
+                pago: pago
+            });
+        } catch (error) {
+            await transaction.rollback();
+
+            console.error("Error al procesar pago:", error);
+
+            return res.status(error.status || 500).json({
+                error: error.message
+            });
+        }
+    });
 
 
 // GET - Obtener pagos de un usuario
@@ -750,13 +832,18 @@ app.get('/api/health', (req, res) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, async () => {
-    console.log(`✅ Servidor en http://localhost:${PORT}`);
+/* istanbul ignore next */
+if (process.env.NODE_ENV !== "test") {
+    app.listen(PORT, async () => {
+        console.log(`✅ Servidor en http://localhost:${PORT}`);
 
-    try {
-        await db.sequelize.sync();
-        console.log(' Base de datos sincronizada');
-    } catch (error) {
-        console.error(' Error al sincronizar BD:', error);
-    }
-});
+        try {
+            await db.sequelize.sync();
+            console.log(' Base de datos sincronizada');
+        } catch (error) {
+            console.error(' Error al sincronizar BD:', error);
+        }
+    });
+}
+
+module.exports = app;

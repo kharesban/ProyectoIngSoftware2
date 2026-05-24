@@ -27,33 +27,113 @@ import ProductoEnProceso from "../assets/ImagenesProductos/ProductoEnProceso.png
 
 const API_PRODUCTOS = "http://localhost:3000/api/productos";
 
-const obtenerImagenProducto = (nombre) => {
-  const texto = nombre.toLowerCase();
+  const reglasImagenProducto = [
+    {
+      palabras: ["cepillo", "plato"],
+      imagen: CepilloPlatosBambu,
+    },
+    {
+      palabras: ["cepillo"],
+      imagen: CepilloBambu,
+    },
+    {
+      palabras: ["botella"],
+      imagen: BotellaReutilizable,
+    },
+    {
+      palabras: ["bolsa"],
+      imagen: BolsaTela,
+    },
+    {
+      palabras: ["pitillo"],
+      imagen: PitillosAcero,
+    },
+    {
+      palabras: ["jabon"],
+      imagen: JabonArtesanal,
+    },
+    {
+      palabras: ["shampoo"],
+      imagen: ShampooSolido,
+    },
+    {
+      palabras: ["acondicionador"],
+      imagen: AcondicionadorSolido,
+    },
+    {
+      palabras: ["desodorante"],
+      imagen: DesodoranteNatural,
+    },
+    {
+      palabras: ["esponja"],
+      imagen: EsponjaVegetal,
+    },
+    {
+      palabras: ["detergente"],
+      imagen: DetergenteEcologico,
+    },
+    {
+      palabras: ["limpiador"],
+      imagen: LimpiadorMultiusos,
+    },
+    {
+      palabras: ["paño"],
+      imagen: PañosReutilizables,
+    },
+    {
+      palabras: ["envoltorio"],
+      imagen: EnvoltorioCeraAbeja,
+    },
+    {
+      palabras: ["contenedor"],
+      imagen: ContenedorVidrio,
+    },
+    {
+      palabras: ["maceta"],
+      imagen: MacetaBiodegradable,
+    },
+    {
+      palabras: ["semilla"],
+      imagen: SemillasHuerta,
+    },
+    {
+      palabras: ["compostera"],
+      imagen: ComposteraDomestica,
+    },
+    {
+      palabras: ["cuaderno"],
+      imagen: CuadernoReciclado,
+    },
+    {
+      palabras: ["lapiz"],
+      imagen: LapicesReciclados,
+    },
+    {
+      palabras: ["tela"],
+      imagen: BolsaTela,
+    },
+  ];
 
-  if (texto.includes("cepillo") && texto.includes("plato")) return CepilloPlatosBambu;
-  if (texto.includes("cepillo")) return CepilloBambu;
-  if (texto.includes("botella")) return BotellaReutilizable;
-  if (texto.includes("bolsa")) return BolsaTela;
-  if (texto.includes("pitillo")) return PitillosAcero;
-  if (texto.includes("jabon") || texto.includes("jabón")) return JabonArtesanal;
-  if (texto.includes("shampoo")) return ShampooSolido;
-  if (texto.includes("acondicionador")) return AcondicionadorSolido;
-  if (texto.includes("desodorante")) return DesodoranteNatural;
-  if (texto.includes("esponja")) return EsponjaVegetal;
-  if (texto.includes("detergente")) return DetergenteEcologico;
-  if (texto.includes("limpiador")) return LimpiadorMultiusos;
-  if (texto.includes("paño")) return PañosReutilizables;
-  if (texto.includes("envoltorio")) return EnvoltorioCeraAbeja;
-  if (texto.includes("contenedor")) return ContenedorVidrio;
-  if (texto.includes("maceta")) return MacetaBiodegradable;
-  if (texto.includes("semilla")) return SemillasHuerta;
-  if (texto.includes("compostera")) return ComposteraDomestica;
-  if (texto.includes("cuaderno")) return CuadernoReciclado;
-  if (texto.includes("lapiz") || texto.includes("lápiz")) return LapicesReciclados;
-  if (texto.includes("bolsa") || texto.includes("tela")) return BolsaTela;
+  const normalizarTexto = (texto) => {
+    return texto
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  };
 
-  return ProductoEnProceso;
-};
+  const productoCoincideConRegla = (texto, regla) => {
+    return regla.palabras.every((palabra) => texto.includes(palabra));
+  };
+
+  const obtenerImagenProducto = (nombre = "") => {
+    const texto = normalizarTexto(nombre);
+
+    const reglaEncontrada = reglasImagenProducto.find((regla) =>
+      productoCoincideConRegla(texto, regla)
+    );
+
+    return reglaEncontrada ? reglaEncontrada.imagen : ProductoEnProceso;
+  };
 
 const Dashboard = () => {
   const navigate = useNavigate();

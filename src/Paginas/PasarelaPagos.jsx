@@ -104,71 +104,197 @@ const PasarelaPagos = () => {
     return true;
   };
 
+  const esPagoConTarjeta = () => {
+    return metodoPago === "credito" || metodoPago === "debito";
+  };
 
-  const validarCampos = () => {
-    const nuevosErrores = {};
-
+  const validarNombreCliente = () => {
     if (!datosCliente.nombre.trim()) {
-      nuevosErrores.nombre = "El nombre es obligatorio.";
+      return "El nombre es obligatorio.";
     }
 
+    return "";
+  };
+
+  const validarDocumentoCliente = () => {
     if (!datosCliente.documento.trim()) {
-      nuevosErrores.documento = "El documento es obligatorio.";
-    } else if (!/^\d{6,12}$/.test(datosCliente.documento)) {
-      nuevosErrores.documento = "El documento debe tener entre 6 y 12 números.";
+      return "El documento es obligatorio.";
     }
 
+    if (!/^\d{6,12}$/.test(datosCliente.documento)) {
+      return "El documento debe tener entre 6 y 12 números.";
+    }
+
+    return "";
+  };
+
+  const validarTelefonoCliente = () => {
     if (!datosCliente.telefono.trim()) {
-      nuevosErrores.telefono = "El teléfono es obligatorio.";
-    } else if (!/^\d{10}$/.test(datosCliente.telefono)) {
-      nuevosErrores.telefono = "El teléfono debe tener exactamente 10 números.";
+      return "El teléfono es obligatorio.";
     }
 
-    if (!datosCliente.correo.trim()) {
-      nuevosErrores.correo = "El correo es obligatorio.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datosCliente.correo)) {
-      nuevosErrores.correo = "El correo no tiene un formato válido.";
+    if (!/^\d{10}$/.test(datosCliente.telefono)) {
+      return "El teléfono debe tener exactamente 10 números.";
     }
+
+    return "";
+  };
+
+  const tieneEspacios = (texto) => {
+  return texto.includes(" ");
+};
+
+const validarFormatoCorreo = (correo) => {
+  const partesCorreo = correo.split("@");
+
+  if (partesCorreo.length !== 2) {
+    return false;
+  }
+
+  const [usuarioCorreo, dominioCorreo] = partesCorreo;
+
+  if (!usuarioCorreo || !dominioCorreo) {
+    return false;
+  }
+
+  if (tieneEspacios(usuarioCorreo) || tieneEspacios(dominioCorreo)) {
+    return false;
+  }
+
+  const partesDominio = dominioCorreo.split(".");
+
+  if (partesDominio.length < 2) {
+    return false;
+  }
+
+  return partesDominio.every((parte) => parte.length > 0);
+};
+
+const validarCorreoCliente = () => {
+  const correo = datosCliente.correo.trim();
+
+  if (!correo) {
+    return "El correo es obligatorio.";
+  }
+
+  if (!validarFormatoCorreo(correo)) {
+    return "El correo no tiene un formato válido.";
+  }
+
+  return "";
+};
+
+  const validarDatosCliente = () => {
+    const erroresCliente = {};
+
+    const errorNombre = validarNombreCliente();
+    const errorDocumento = validarDocumentoCliente();
+    const errorTelefono = validarTelefonoCliente();
+    const errorCorreo = validarCorreoCliente();
+
+    if (errorNombre) erroresCliente.nombre = errorNombre;
+    if (errorDocumento) erroresCliente.documento = errorDocumento;
+    if (errorTelefono) erroresCliente.telefono = errorTelefono;
+    if (errorCorreo) erroresCliente.correo = errorCorreo;
+
+    return erroresCliente;
+  };
+
+  const validarMetodoPago = () => {
+    const erroresMetodo = {};
 
     if (!metodoPago) {
-      nuevosErrores.metodoPago = "Debes seleccionar un método de pago.";
+      erroresMetodo.metodoPago = "Debes seleccionar un método de pago.";
     }
 
-    if (metodoPago === "contraEntrega") {
-      if (!datosContraEntrega.puntoPago) {
-        nuevosErrores.puntoPago = "Debes seleccionar Efecty o Servientrega.";
-      }
+    if (metodoPago === "contraEntrega" && !datosContraEntrega.puntoPago) {
+      erroresMetodo.puntoPago = "Debes seleccionar Efecty o Servientrega.";
     }
 
-      if (metodoPago === "credito" || metodoPago === "debito") {
-      if (!datosTarjeta.nombreTitular.trim()) {
-        nuevosErrores.nombreTitular = "El nombre del titular es obligatorio.";
-      }
+    return erroresMetodo;
+  };
 
-      if (!datosTarjeta.numeroTarjeta.trim()) {
-        nuevosErrores.numeroTarjeta = "El número de tarjeta es obligatorio.";
-      } else if (!validarLuhn(datosTarjeta.numeroTarjeta)) {
-        nuevosErrores.numeroTarjeta = "El número de tarjeta no es válido.";
-      }
-
-      if (!datosTarjeta.fechaVencimiento.trim()) {
-        nuevosErrores.fechaVencimiento = "La fecha de vencimiento es obligatoria.";
-      } else if (!validarFechaVencimiento(datosTarjeta.fechaVencimiento)) {
-        nuevosErrores.fechaVencimiento = "La fecha debe tener formato MM/AA y no estar vencida.";
-      }
-
-      if (!datosTarjeta.cvv.trim()) {
-        nuevosErrores.cvv = "El CVV es obligatorio.";
-      } else if (!/^\d{3,4}$/.test(datosTarjeta.cvv)) {
-        nuevosErrores.cvv = "El CVV debe tener 3 o 4 números.";
-      }
+  const validarNombreTitular = () => {
+    if (!datosTarjeta.nombreTitular.trim()) {
+      return "El nombre del titular es obligatorio.";
     }
 
-    if (metodoPago === "credito") {
-      if (!datosTarjeta.cuotas) {
-        nuevosErrores.cuotas = "Debes seleccionar el número de cuotas.";
-      }
+    return "";
+  };
+
+  const validarNumeroTarjetaCampo = () => {
+    if (!datosTarjeta.numeroTarjeta.trim()) {
+      return "El número de tarjeta es obligatorio.";
     }
+
+    if (!validarLuhn(datosTarjeta.numeroTarjeta)) {
+      return "El número de tarjeta no es válido.";
+    }
+
+    return "";
+  };
+
+  const validarFechaTarjetaCampo = () => {
+    if (!datosTarjeta.fechaVencimiento.trim()) {
+      return "La fecha de vencimiento es obligatoria.";
+    }
+
+    if (!validarFechaVencimiento(datosTarjeta.fechaVencimiento)) {
+      return "La fecha debe tener formato MM/AA y no estar vencida.";
+    }
+
+    return "";
+  };
+
+  const validarCvvTarjeta = () => {
+    if (!datosTarjeta.cvv.trim()) {
+      return "El CVV es obligatorio.";
+    }
+
+    if (!/^\d{3,4}$/.test(datosTarjeta.cvv)) {
+      return "El CVV debe tener 3 o 4 números.";
+    }
+
+    return "";
+  };
+
+  const validarDatosTarjeta = () => {
+    const erroresTarjeta = {};
+
+    if (!esPagoConTarjeta()) {
+      return erroresTarjeta;
+    }
+
+    const errorNombreTitular = validarNombreTitular();
+    const errorNumeroTarjeta = validarNumeroTarjetaCampo();
+    const errorFecha = validarFechaTarjetaCampo();
+    const errorCvv = validarCvvTarjeta();
+
+    if (errorNombreTitular) erroresTarjeta.nombreTitular = errorNombreTitular;
+    if (errorNumeroTarjeta) erroresTarjeta.numeroTarjeta = errorNumeroTarjeta;
+    if (errorFecha) erroresTarjeta.fechaVencimiento = errorFecha;
+    if (errorCvv) erroresTarjeta.cvv = errorCvv;
+
+    return erroresTarjeta;
+  };
+
+  const validarCuotas = () => {
+    if (metodoPago === "credito" && !datosTarjeta.cuotas) {
+      return {
+        cuotas: "Debes seleccionar el número de cuotas.",
+      };
+    }
+
+    return {};
+  };
+
+  const validarCampos = () => {
+    const nuevosErrores = {
+      ...validarDatosCliente(),
+      ...validarMetodoPago(),
+      ...validarDatosTarjeta(),
+      ...validarCuotas(),
+    };
 
     setErrores(nuevosErrores);
 
