@@ -2,41 +2,80 @@
 
 Este proyecto integra un frontend desarrollado con React + Vite y un backend con Node.js para la gestión de Ecomart.
 
-## Requisitos previos
+```markdown
+# Requisitos previos
 
-Antes de comenzar, asegúrate de tener instalado:
-- Node.js (versión 14 o superior)
-- MySQL Workbench
+Para que el proyecto funcione correctamente en local, cada desarrollador debe tener instalado:
+
+- Node.js
+- npm
+- MySQL
+- Docker Desktop
 - Git
 
-### Dependencias del proyecto
+# Instalación
 
-```bash
-# Frontend
-npm install react react-dom react-router-dom
+Después de clonar el repositorio, ejecuta los siguientes comandos desde la carpeta principal del proyecto:
 
-# Backend
-npm install express sequelize mysql2 dotenv cors bcryptjs
-
-# Desarrollo y pruebas
-npm install -D vite @vitejs/plugin-react eslint nodemon jest babel-jest jest-environment-jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event @babel/preset-env @babel/preset-react
-
-## Instalación y ejecución
-
-### 📖 Instrucciones detalladas
-Para ver el paso a paso completo de instalación y ejecución, consulta el [Instructivo de instalación](INSTRUCTIVO.md)
-
-### Resumen rápido
-
-```bash
-# Clonar el repositorio
-git clone -b union-peticiones --single-branch https://github.com/kharesban/ProyectoIngSoftware2.git
-
-# Instalar dependencias
 npm install
+```
 
-# Configurar variables de entorno (crear archivo .env)
-# DB_HOST=localhost, DB_USER, DB_PASSWORD, DB_NAME=ecomart_db, PORT=3000
+Si el backend tiene su propio `package.json`, instala también sus dependencias:
 
-# Ejecutar el proyecto
-npm run dev en front en un terminal y npm run dev/node server.js en el back en otro terminal
+```bash
+cd Backend
+npm install
+cd ..
+```
+
+# Dependencias principales
+
+```bash
+npm install express cors dotenv sequelize mysql2
+```
+
+# Pruebas unitarias y cobertura
+
+```bash
+npm install -D jest babel-jest jest-environment-jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event supertest
+```
+
+# Pruebas E2E con Playwright
+
+```bash
+npm install -D @playwright/test
+npx playwright install
+```
+
+# SonarQube
+
+Instala la dependencia:
+
+```bash
+npm install -D @sonar/scan
+```
+
+Levanta SonarQube con Docker:
+
+```bash
+docker-compose up -d
+```
+
+Accede a SonarQube en:
+
+```
+http://localhost:9000
+```
+
+# Scripts disponibles
+
+| Comando | Descripción |
+|---------|-------------|
+| `npm test` | Ejecuta pruebas unitarias y genera cobertura |
+| `npm run test:e2e` | Ejecuta pruebas end-to-end |
+| `npm run sonar` | Envía el análisis a SonarQube |
+
+# Configuración del entorno
+
+Crea/configura el archivo `.env` dentro de la carpeta del backend con los datos de conexión a MySQL. Esto es necesario para el correcto funcionamiento del login, productos, carrito y pagos.
+
