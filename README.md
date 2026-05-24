@@ -2,7 +2,7 @@
 
 Este proyecto integra un frontend desarrollado con React + Vite y un backend con Node.js para la gestión de Ecomart.
 
-```markdown
+
 # Requisitos previos
 
 Para que el proyecto funcione correctamente en local, cada desarrollador debe tener instalado:
@@ -22,7 +22,6 @@ npm install
 
 Si el backend tiene su propio `package.json`, instala también sus dependencias:
 
-```bash
 cd Backend
 npm install
 cd ..
