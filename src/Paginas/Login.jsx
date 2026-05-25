@@ -35,13 +35,6 @@ function Login() {
         return;
       }
 
-      /*
-        Esto funciona si tu backend responde:
-        res.json(usuarioSinPassword)
-
-        O si responde:
-        res.json({ usuario: usuarioSinPassword })
-      */
       const usuarioLogueado = data.usuario || data;
 
       login(usuarioLogueado);
