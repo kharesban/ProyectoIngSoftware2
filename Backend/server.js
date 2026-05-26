@@ -101,12 +101,12 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
         
-        // ¡En producción debes comparar contraseñas hasheadas!
+        
         if (usuario.password !== password) {
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
         
-        // No enviar la contraseña en la respuesta
+        
         const { password: _, ...usuarioSinPassword } = usuario.toJSON();
         res.json(usuarioSinPassword);
     } catch (error) {
